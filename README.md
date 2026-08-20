@@ -30,10 +30,26 @@ Your browser opens at `http://127.0.0.1:8765`. That's it.
 comes with the Command Line Tools macOS offers to install on first use; on
 Windows, install it from python.org.
 
-Not comfortable with a terminal? Don't use one:
+Not comfortable with a terminal?
 
-- **macOS** — double-click **`Start JobDibs.command`** (blocked once by Gatekeeper — [how to allow it](HOW-TO-USE.md))
 - **Windows** — double-click **`Start JobDibs.bat`**
+- **macOS** — double-click **`Start JobDibs.command`**, then approve once:
+  **System Settings → Privacy & Security → Open Anyway**
+
+> **Why macOS blocks it, and why that isn't a bug.** Every file downloaded
+> through a browser is tagged `com.apple.quarantine`, and the tag propagates to
+> everything extracted from the zip. An unsigned script — signing costs $99/yr
+> from Apple — is blocked on double-click. This is unrelated to the file's
+> contents and happens to every unsigned open-source project.
+>
+> Three ways around it, pick one:
+> 1. The one-time System Settings approval above
+> 2. Run `python3 app.py` from Terminal — Gatekeeper never enters the picture
+> 3. Strip the tag from the folder once:
+>    `xattr -dr com.apple.quarantine <path-to-folder>`
+>
+> **Cloning the repo** (`git clone` or GitHub Desktop) avoids this entirely —
+> cloned files are never quarantined.
 
 **→ [Step-by-step guide for Windows and macOS](HOW-TO-USE.md)** ·
 **[מדריך מלא בעברית](HOW-TO-USE.he.md)**

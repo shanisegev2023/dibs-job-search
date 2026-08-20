@@ -111,6 +111,22 @@ privileges"** — the executable bit is missing. There is no GUI fix; run
 > On macOS Sequoia and later this is the only route — the old Control-click →
 > Open bypass no longer works.
 
+**Why this happens, and how to end it permanently.** Every file downloaded
+through a browser is tagged `com.apple.quarantine`, and the tag propagates to
+everything extracted from the zip. Gatekeeper blocks a tagged script that isn't
+signed by Apple. Strip the tag from the whole folder once and double-clicking
+works with no dialog at all:
+
+```
+xattr -dr com.apple.quarantine ~/Downloads/JobDibs
+```
+
+(Use the real path — you can drag the folder onto Terminal instead of typing.)
+
+> **If you have GitHub Desktop:** cloning the repo doesn't go through a browser,
+> so its files are never tagged and nothing is ever blocked. It's the smoothest
+> way to run this on a Mac.
+
 ---
 
 ## Linux
