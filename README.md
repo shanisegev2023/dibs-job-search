@@ -26,11 +26,13 @@ python3 app.py
 
 Your browser opens at `http://127.0.0.1:8765`. That's it.
 
-**No dependencies. No install. No account. No server.** Python 3.8+ only.
+**No dependencies. No account. No server.** Python 3.8+ only — on macOS it
+comes with the Command Line Tools macOS offers to install on first use; on
+Windows, install it from python.org.
 
 Not comfortable with a terminal? Don't use one:
 
-- **macOS** — right-click **`Start JobDibs.command`** → Open
+- **macOS** — double-click **`Start JobDibs.command`** (blocked once by Gatekeeper — [how to allow it](HOW-TO-USE.md))
 - **Windows** — double-click **`Start JobDibs.bat`**
 
 **→ [Step-by-step guide for Windows and macOS](HOW-TO-USE.md)** ·

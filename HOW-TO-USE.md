@@ -42,9 +42,12 @@ Move the resulting `jobdibs` folder somewhere permanent, e.g. Documents.
 
 Double-click **`Start JobDibs.bat`**.
 
-> If a blue **"Windows protected your PC"** screen appears: click **More info**
-> → **Run anyway**. It shows because the file came from the internet, and only
-> happens once.
+> If a security warning appears, Windows shows one of two, depending on
+> version and settings:
+> - blue **"Windows protected your PC"** → **More info** → **Run anyway**
+> - **"Open File – Security Warning"** → **Run**
+>
+> Both appear because the file came from the internet. Both are one-time.
 
 A black window opens, and your browser opens on the app a few seconds later.
 
@@ -55,17 +58,35 @@ A black window opens, and your browser opens on the app a few seconds later.
 
 ## macOS
 
-### 1. Unzip
+### 1. Unzip and Python
 
-Double-click `jobdibs.zip`. Move the resulting folder somewhere permanent.
+Double-click the zip. Move the resulting folder somewhere permanent.
 
-### 2. First run — right-click, don't double-click
+**Python is not preinstalled on macOS.** The first time something runs
+`python3`, macOS offers to install the Xcode Command Line Tools — click
+**Install** and wait a few minutes. That one-time install brings Python 3.9,
+which is more than enough (JobDibs needs 3.8+).
 
-1. **Right-click** (or Control-click) **`Start JobDibs.command`**
-2. Choose **Open**
-3. On the *"macOS cannot verify the developer"* warning, click **Open** again
+### 2. First run — macOS will block it once
 
-Only needed the first time. After that a normal double-click works.
+Double-click **`Start JobDibs.command`**. macOS shows *"Apple could not verify
+that it is free of malware"* with only two buttons: *Move to Trash* and *Done*.
+
+**Click Done.** This happens to every file downloaded from the internet that
+isn't signed with a paid Apple certificate. Then, once:
+
+1. **System Settings** → **Privacy & Security**
+2. Scroll to the bottom, to **Security**. You'll see
+   *"Start JobDibs.command" was blocked to protect your Mac*
+3. Click **Open Anyway**, authenticate, then **Open**
+
+After that a normal double-click works.
+
+> On macOS Sequoia and later this is the only route — the old Control-click →
+> Open bypass no longer works.
+
+**Prefer to skip all of that?** Open Terminal, `cd` into the folder, and run
+`python3 app.py`. Same thing, no Gatekeeper.
 
 > If macOS offers to install developer command line tools, click **Install**,
 > wait, and try again. That's Apple's one-time Python setup.
