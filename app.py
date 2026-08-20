@@ -72,6 +72,7 @@ def run_search(run_id, body):
             cv_text, roles,
             market=body.get("market") or "israel",
             region=body.get("region") or "all",
+            strict_location=body.get("strict_location", True),
             scope_prefs=body.get("scopes") or [],
             extra_terms=body.get("extra_terms") or [],
             exclude_terms=body.get("exclude_terms") or [])
@@ -208,6 +209,7 @@ class Handler(BaseHTTPRequestHandler):
                 [r for r in (body.get("roles") or []) if r.strip()] or ["product manager"],
                 market=body.get("market") or "israel",
                 region=body.get("region") or "all",
+                strict_location=body.get("strict_location", True),
                 scope_prefs=body.get("scopes") or [],
                 extra_terms=body.get("extra_terms") or [],
             exclude_terms=body.get("exclude_terms") or [])
@@ -242,7 +244,7 @@ class Handler(BaseHTTPRequestHandler):
             profs = jload(PROFILES, {})
             name = (body.get("name") or "").strip() or "ללא שם"
             profs[name] = {k: body.get(k) for k in
-                           ("roles", "market", "region", "scopes",
+                           ("roles", "market", "region", "strict_location", "scopes",
                             "extra_terms", "exclude_terms",
                             "min_score", "cv_text", "cv_name")}
             jdump(PROFILES, profs)

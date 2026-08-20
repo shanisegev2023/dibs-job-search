@@ -382,7 +382,8 @@ def expand_roles(roles):
 
 
 def build_profile(cv_text, roles, market="israel", scope_prefs=None,
-                  extra_terms=None, exclude_terms=None, region="all"):
+                  extra_terms=None, exclude_terms=None, region="all",
+                  strict_location=True):
     """בונה פרופיל התאמה מלא מקו"ח + כותרות תפקיד. מחזיר dict."""
     text = (cv_text or "").lower()
     mk = _load_markets().get(market, {})
@@ -462,8 +463,8 @@ def build_profile(cv_text, roles, market="israel", scope_prefs=None,
                           "families": chosen_families,
                      "region_label": reg.get("label", ""), "explicit": explicit_scope},
         "domains": {"weight": 30, "terms": domains},
-        "location_rules": {"weight": 20,
-                           "positive": loc_pos, "negative": loc_neg},
+        "location_rules": {"weight": 20, "positive": loc_pos,
+                           "negative": loc_neg, "strict": bool(strict_location)},
         "seniority": {"weight": 10, "terms": seniority},
         "freshness": {"weight": 10, "days_full_score": 7, "days_zero_score": 45,
                       "stale_penalty": -12},
@@ -1122,6 +1123,28 @@ def title_ok(job, prof):
     return any(x in t for x in prof["title_must_match"])
 
 
+REMOTE_HINTS = ("remote", "anywhere", "worldwide", "global", "distributed",
+                "work from home", "wfh", "מרחוק", "היברידי", "מהבית")
+
+
+def location_ok(job, prof):
+    """
+    סינון קשיח לפי מיקום, כשהמשתמש ביקש זאת.
+    נבדק רק שדה המיקום, הכותרת וסוג המשרה — לא גוף המודעה, כי מודעה
+    בברלין שמזכירה "Europe" בתיאור אינה משרה באזור שביקשת.
+    """
+    lr = prof["location_rules"]
+    if not lr.get("strict"):
+        return True
+    if not (job.get("location") or "").strip():
+        return True                      # אין שדה מיקום — לא פוסלים משרה בגללו
+    where = " ".join([job.get("location", ""), job.get("title", ""),
+                      job.get("employment_type", "")]).lower()
+    if any(h in where for h in REMOTE_HINTS):
+        return True
+    return any(term_in(where, t) for t in lr["positive"])
+
+
 def job_allowed(job, prof):
     """מילים שהמשתמש ביקש לסנן החוצה — מוציאות את המשרה לגמרי."""
     ex = prof.get("exclude_terms") or []
@@ -1246,8 +1269,13 @@ def search(prof, min_score=35, limit=300, use_ats=True, use_boards=True,
 
     log(f"מסננת {len(raw)} משרות לפי כותרת ומדרגת…")
     now = datetime.now(timezone.utc)
-    out = [score(j, prof, now) for j in raw
-           if title_ok(j, prof) and job_allowed(j, prof)]
+    kept = [j for j in raw if title_ok(j, prof) and job_allowed(j, prof)]
+    if prof["location_rules"].get("strict"):
+        before = len(kept)
+        kept = [j for j in kept if location_ok(j, prof)]
+        if before - len(kept):
+            log(f"סוננו {before - len(kept)} משרות מחוץ לאזור שנבחר.")
+    out = [score(j, prof, now) for j in kept]
     out = dedupe([j for j in out if j["score"] >= min_score])[:limit]
     log(f"נשארו {len(out)} משרות רלוונטיות.")
     return out, sorted(set(sources))

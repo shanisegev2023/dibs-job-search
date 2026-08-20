@@ -190,6 +190,11 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--grid);
       <select id="region"></select>
     </div>
     <div class="fg">
+      <label>סינון מיקום</label>
+      <button class="chip" data-opt="strict_location" aria-pressed="true">
+        רק משרות באזור שנבחר</button>
+    </div>
+    <div class="fg">
       <label for="min">ניקוד מינימלי: <span id="minv">35</span></label>
       <input type="range" id="min" min="0" max="90" value="35" step="5">
     </div>
@@ -227,7 +232,8 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--grid);
       <button class="btn ghost" id="addBoard">הוספה</button>
       <span class="hint" id="boardMsg" style="margin:0"></span>
     </div>
-    <p class="hint">שתי המערכות האלה לא ניתנות לזיהוי משם החברה בלבד. מדביקים
+    <p class="hint">שתי המערכות האלה מחזירות את <b>כל</b> המשרות של החברה בכל העולם,
+      ולכן כדאי להשאיר את סינון המיקום דלוק. הן גם לא ניתנות לזיהוי משם החברה בלבד. מדביקים
       פעם אחת את כתובת דף הקריירה, והן נכללות בכל ריצה מכאן והלאה.</p>
   </div>
 
@@ -327,7 +333,7 @@ const PREF_SCOPES = ["full-time","part-time","fractional","freelance","contract"
                      "maternity-cover","interim","student","entry-level","shift"];
 
 const S = { roles:[], cvText:"", cvName:"", scopes:new Set(), extra:[], exclude:[],
-            opts:{use_boards:true, use_ats:true, auto_discover:true},
+            opts:{use_boards:true, use_ats:true, auto_discover:true, strict_location:true},
             jobs:[], meta:{}, status:{},
             F:{q:"",src:"",sort:"score"}, fscopes:new Set() };
 

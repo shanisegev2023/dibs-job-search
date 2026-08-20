@@ -144,6 +144,18 @@ The region you pick lifts roles inside it and pushes down distant ones.
 remote market the regions are time zones rather than cities, since that's what
 actually decides whether a remote role works for you.
 
+**Location filter** — the button next to the region menu, on by default. With
+it on, jobs outside the selected market are **not shown at all**. With it off,
+location only affects the score: a Berlin role ranks lower but still appears.
+
+The filter reads the job's **location field only**, not the description — a
+Berlin posting that mentions "Europe" in its text is still a Berlin job.
+Anything marked remote, hybrid or worldwide always passes, and so does a job
+with no location field, since missing data shouldn't disqualify a role.
+
+> Especially relevant if you added a Workday or Comeet board: those return
+> *every* job the company has worldwide.
+
 Add your own under `regions` in `markets.json` and it appears in the menu.
 
 **4 · Employment type.** The field that matters most. Pick the types you
