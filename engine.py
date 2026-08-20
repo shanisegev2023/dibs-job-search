@@ -464,7 +464,9 @@ def build_profile(cv_text, roles, market="israel", scope_prefs=None,
                      "region_label": reg.get("label", ""), "explicit": explicit_scope},
         "domains": {"weight": 30, "terms": domains},
         "location_rules": {"weight": 20, "positive": loc_pos,
-                           "negative": loc_neg, "strict": bool(strict_location)},
+                           "negative": loc_neg, "strict": bool(strict_location),
+                           "market": market, "region": region or "all",
+                           "allowed_codes": MARKET_GEO.get(market, set())},
         "seniority": {"weight": 10, "terms": seniority},
         "freshness": {"weight": 10, "days_full_score": 7, "days_zero_score": 45,
                       "stale_penalty": -12},
@@ -1123,26 +1125,294 @@ def title_ok(job, prof):
     return any(x in t for x in prof["title_must_match"])
 
 
-REMOTE_HINTS = ("remote", "anywhere", "worldwide", "global", "distributed",
-                "work from home", "wfh", "מרחוק", "היברידי", "מהבית")
+# ── גיאוגרפיה: לאיזו מדינה שייכת המשרה ─────────────────────────────
+# הכלל: "remote"/"hybrid" הן צורת עבודה, לא מיקום. משרה שכתוב עליה
+# "Remote — Berlin" היא משרה בגרמניה, ומי שביקש ישראל לא אמור לקבל אותה.
+
+GEO_COUNTRIES = {
+ "IL": ("israel", "ישראל", "tel aviv", "tel-aviv", "telaviv", "תל אביב", "תל־אביב",
+        "jerusalem", "ירושלים", "haifa", "חיפה", "herzliya", "herzeliya", "הרצליה",
+        "raanana", "ra'anana", "רעננה", "netanya", "נתניה", "petah tikva", "פתח תקווה",
+        "ramat gan", "רמת גן", "rehovot", "רחובות", "beer sheva", "be'er sheva",
+        "באר שבע", "yokneam", "יקנעם", "kfar saba", "כפר סבא", "holon", "חולון",
+        "rishon", "ראשון לציון", "ashdod", "אשדוד", "modiin", "מודיעין",
+        "hod hasharon", "הוד השרון", "givatayim", "גבעתיים", "ness ziona", "נס ציונה",
+        "airport city", "caesarea", "קיסריה", "eilat", "אילת"),
+ "US": ("united states", "u.s.", "u.s.a", "usa", "us", "new york", "nyc", "brooklyn",
+        "san francisco", "bay area", "silicon valley", "palo alto", "mountain view",
+        "san jose", "sunnyvale", "santa clara", "seattle", "bellevue", "boston",
+        "austin", "dallas", "houston", "denver", "boulder", "chicago", "atlanta",
+        "miami", "orlando", "tampa", "phoenix", "portland", "los angeles",
+        "san diego", "las vegas", "minneapolis", "detroit", "philadelphia",
+        "pittsburgh", "washington dc", "arlington va", "raleigh", "charlotte",
+        "nashville", "salt lake city", "kansas city", "st. louis", "columbus ohio",
+        "california", "texas", "florida", "colorado", "massachusetts", "illinois",
+        "new jersey", "virginia", "arizona", "utah", "oregon", "michigan",
+        "north carolina", "pennsylvania", "washington state"),
+ "CA": ("canada", "toronto", "vancouver", "montreal", "ottawa", "calgary",
+        "edmonton", "waterloo", "ontario", "quebec", "british columbia"),
+ "UK": ("united kingdom", "u.k.", "england", "scotland", "wales",
+        "northern ireland", "london", "manchester", "birmingham uk", "leeds",
+        "glasgow", "edinburgh", "bristol", "sheffield", "liverpool", "newcastle",
+        "nottingham", "brighton", "oxford", "milton keynes", "belfast", "cardiff"),
+ "IE": ("ireland", "dublin", "galway", "limerick"),
+ "DE": ("germany", "deutschland", "berlin", "munich", "münchen", "muenchen",
+        "hamburg", "frankfurt", "cologne", "köln", "stuttgart", "düsseldorf",
+        "dusseldorf", "leipzig", "dresden", "nuremberg", "nürnberg", "karlsruhe",
+        "hannover", "bremen", "essen", "dortmund", "bavaria", "bayern"),
+ "AT": ("austria", "österreich", "vienna", "wien", "graz", "salzburg", "linz"),
+ "CH": ("switzerland", "schweiz", "suisse", "zurich", "zürich", "geneva", "genève",
+        "basel", "bern", "lausanne", "lugano", "zug"),
+ "NL": ("netherlands", "holland", "amsterdam", "rotterdam", "utrecht", "eindhoven",
+        "the hague", "den haag", "delft", "groningen"),
+ "BE": ("belgium", "brussels", "bruxelles", "antwerp", "antwerpen", "ghent", "leuven"),
+ "LU": ("luxembourg", "luxemburg"),
+ "FR": ("france", "paris", "lyon", "marseille", "toulouse", "bordeaux", "lille",
+        "nantes", "montpellier", "strasbourg", "grenoble", "sophia antipolis"),
+ "ES": ("spain", "españa", "espana", "madrid", "barcelona", "valencia", "seville",
+        "sevilla", "malaga", "málaga", "bilbao", "zaragoza", "canary islands"),
+ "PT": ("portugal", "lisbon", "lisboa", "porto", "braga", "coimbra", "madeira"),
+ "IT": ("italy", "italia", "milan", "milano", "rome", "roma", "turin", "torino",
+        "bologna", "florence", "firenze", "naples", "napoli", "venice"),
+ "GR": ("greece", "athens", "thessaloniki", "crete"),
+ "CY": ("cyprus", "nicosia", "limassol", "larnaca"),
+ "MT": ("malta", "valletta"),
+ "SE": ("sweden", "sverige", "stockholm", "gothenburg", "göteborg", "malmö", "malmo",
+        "uppsala", "lund"),
+ "NO": ("norway", "norge", "oslo", "bergen", "trondheim", "stavanger"),
+ "DK": ("denmark", "danmark", "copenhagen", "københavn", "aarhus", "odense"),
+ "FI": ("finland", "suomi", "helsinki", "espoo", "tampere", "oulu"),
+ "IS": ("iceland", "reykjavik", "reykjavík"),
+ "PL": ("poland", "polska", "warsaw", "warszawa", "krakow", "kraków", "cracow",
+        "wroclaw", "wrocław", "gdansk", "gdańsk", "poznan", "poznań", "lodz", "katowice"),
+ "CZ": ("czech republic", "czechia", "prague", "praha", "brno", "ostrava"),
+ "SK": ("slovakia", "bratislava", "kosice", "košice"),
+ "HU": ("hungary", "budapest", "debrecen", "szeged"),
+ "RO": ("romania", "bucharest", "bucurești", "cluj", "cluj-napoca", "timisoara",
+        "timișoara", "iasi", "iași", "brasov", "brașov"),
+ "BG": ("bulgaria", "sofia", "plovdiv", "varna", "burgas"),
+ "HR": ("croatia", "zagreb", "split", "rijeka"),
+ "SI": ("slovenia", "ljubljana", "maribor"),
+ "RS": ("serbia", "belgrade", "beograd", "novi sad", "nis", "niš"),
+ "BA": ("bosnia", "sarajevo", "banja luka"),
+ "MK": ("north macedonia", "skopje"),
+ "AL": ("albania", "tirana"),
+ "EE": ("estonia", "tallinn", "tartu"),
+ "LV": ("latvia", "riga", "rīga"),
+ "LT": ("lithuania", "vilnius", "kaunas"),
+ "UA": ("ukraine", "kyiv", "kiev", "lviv", "kharkiv", "odesa", "odessa", "dnipro"),
+ "BY": ("belarus", "minsk"),
+ "MD": ("moldova", "chisinau", "chișinău"),
+ "RU": ("russia", "moscow", "st petersburg", "saint petersburg", "novosibirsk",
+        "yekaterinburg", "kazan"),
+ "TR": ("turkey", "türkiye", "turkiye", "istanbul", "ankara", "izmir", "antalya"),
+ "GE": ("tbilisi", "batumi"),
+ "AM": ("armenia", "yerevan"),
+ "AZ": ("azerbaijan", "baku"),
+ "AE": ("united arab emirates", "u.a.e", "uae", "dubai", "abu dhabi", "sharjah"),
+ "SA": ("saudi arabia", "riyadh", "jeddah", "dammam", "neom"),
+ "QA": ("qatar", "doha"),
+ "KW": ("kuwait",),
+ "BH": ("bahrain", "manama"),
+ "OM": ("oman", "muscat"),
+ "JO": ("jordan", "amman"),
+ "LB": ("lebanon", "beirut"),
+ "EG": ("egypt", "cairo", "alexandria", "giza"),
+ "MA": ("morocco", "casablanca", "rabat", "marrakech", "tangier"),
+ "TN": ("tunisia", "tunis"),
+ "DZ": ("algeria", "algiers"),
+ "ZA": ("south africa", "johannesburg", "cape town", "durban", "pretoria"),
+ "NG": ("nigeria", "lagos", "abuja"),
+ "KE": ("kenya", "nairobi", "mombasa"),
+ "GH": ("ghana", "accra"),
+ "ET": ("ethiopia", "addis ababa"),
+ "IN": ("india", "bangalore", "bengaluru", "hyderabad", "mumbai", "bombay", "pune",
+        "chennai", "delhi", "gurgaon", "gurugram", "noida", "kolkata", "ahmedabad",
+        "kochi", "jaipur", "indore", "coimbatore"),
+ "PK": ("pakistan", "karachi", "lahore", "islamabad"),
+ "BD": ("bangladesh", "dhaka"),
+ "LK": ("sri lanka", "colombo"),
+ "NP": ("nepal", "kathmandu"),
+ "CN": ("china", "beijing", "shanghai", "shenzhen", "guangzhou", "hangzhou",
+        "chengdu", "suzhou", "wuhan", "xi'an"),
+ "HK": ("hong kong", "hongkong"),
+ "TW": ("taiwan", "taipei", "hsinchu", "kaohsiung"),
+ "JP": ("japan", "tokyo", "osaka", "kyoto", "yokohama", "nagoya", "fukuoka"),
+ "KR": ("south korea", "seoul", "busan", "incheon"),
+ "SG": ("singapore",),
+ "MY": ("malaysia", "kuala lumpur", "penang", "johor"),
+ "TH": ("thailand", "bangkok", "chiang mai", "phuket"),
+ "VN": ("vietnam", "viet nam", "ho chi minh", "hanoi", "da nang"),
+ "ID": ("indonesia", "jakarta", "bandung", "surabaya", "bali"),
+ "PH": ("philippines", "manila", "makati", "cebu", "taguig", "pasig", "quezon city"),
+ "AU": ("australia", "sydney", "melbourne", "brisbane", "perth", "adelaide",
+        "canberra", "gold coast"),
+ "NZ": ("new zealand", "auckland", "wellington", "christchurch"),
+ "BR": ("brazil", "brasil", "sao paulo", "são paulo", "rio de janeiro",
+        "belo horizonte", "porto alegre", "curitiba", "recife", "florianopolis",
+        "florianópolis", "brasilia", "brasília"),
+ "AR": ("argentina", "buenos aires", "cordoba argentina", "rosario", "mendoza"),
+ "CL": ("chile", "santiago de chile"),
+ "CO": ("colombia", "bogota", "bogotá", "medellin", "medellín", "cali"),
+ "PE": ("peru", "lima"),
+ "UY": ("uruguay", "montevideo"),
+ "EC": ("ecuador", "quito", "guayaquil"),
+ "MX": ("mexico", "méxico", "mexico city", "ciudad de méxico", "guadalajara",
+        "monterrey", "queretaro", "querétaro", "tijuana", "puebla", "merida"),
+ "CR": ("costa rica", "san jose costa rica"),
+ "PA": ("panama", "panamá"),
+ "GT": ("guatemala",),
+ "DO": ("dominican republic", "santo domingo"),
+ "JM": ("jamaica", "kingston jamaica"),
+}
+
+# גושים אזוריים — קיצור שנפוץ במודעות. כל גוש מתורגם לקבוצת מדינות.
+_EU = {"IE","DE","AT","CH","NL","BE","LU","FR","ES","PT","IT","GR","CY","MT","SE",
+       "NO","DK","FI","IS","PL","CZ","SK","HU","RO","BG","HR","SI","RS","BA","MK",
+       "AL","EE","LV","LT","UK"}
+_MEA = {"IL","AE","SA","QA","KW","BH","OM","JO","LB","EG","MA","TN","DZ","ZA",
+        "NG","KE","GH","ET","TR"}
+_APAC = {"IN","CN","HK","TW","JP","KR","SG","MY","TH","VN","ID","PH","AU","NZ",
+         "PK","BD","LK","NP"}
+_LATAM = {"BR","AR","CL","CO","PE","UY","EC","MX","CR","PA","GT","DO","JM"}
+_NA = {"US","CA"}
+
+GEO_BLOCS = {
+    "emea": _EU | _MEA,
+    "europe": _EU,
+    "european union": _EU,
+    "eea": _EU,
+    "dach": {"DE", "AT", "CH"},
+    "benelux": {"NL", "BE", "LU"},
+    "nordics": {"SE", "NO", "DK", "FI", "IS"},
+    "iberia": {"ES", "PT"},
+    "baltics": {"EE", "LV", "LT"},
+    "middle east": _MEA,
+    "mena": {"AE","SA","QA","KW","BH","OM","JO","LB","EG","MA","TN","DZ","IL"},
+    "apac": _APAC,
+    "asia pacific": _APAC,
+    "asia-pacific": _APAC,
+    "southeast asia": {"SG","MY","TH","VN","ID","PH"},
+    "latam": _LATAM,
+    "latin america": _LATAM,
+    "south america": {"BR","AR","CL","CO","PE","UY","EC"},
+    "north america": _NA,
+    "americas": _NA | _LATAM,
+    "namer": _NA,
+}
+
+# אילו מדינות נחשבות "בתוך השוק" לכל שוק שאפשר לבחור בממשק
+MARKET_GEO = {
+    "israel": {"IL"},
+    "europe": _EU,
+    "usa": {"US"},
+    "remote_global": None,          # None = אין הגבלה גיאוגרפית
+}
+
+# ביטויים שמוציאים משרה החוצה גם אם המיקום נראה תמים
+GEO_HARD_BLOCK = {
+    "IL": (),
+    "US": ("us only", "usa only", "united states only", "u.s. only",
+           "must be located in the us", "must reside in the united states",
+           "us work authorization", "authorized to work in the united states",
+           "must be authorized to work in the u.s", "us citizens only",
+           "green card", "w2 only", "must be based in the us"),
+    "CA": ("canada only", "must be located in canada"),
+    "UK": ("uk only", "united kingdom only", "right to work in the uk",
+           "must be based in the uk"),
+    "IN": ("india only", "must be based in india"),
+    "AU": ("australia only",),
+    "BR": ("brazil only",),
+    "PH": ("philippines only",),
+    "_EU": ("eu only", "european union only", "must be based in the eu",
+            "eu work authorization", "must reside in the eu", "europe only",
+            "must be located in europe"),
+}
+
+_GEO_INDEX = [(code, term) for code, terms in GEO_COUNTRIES.items() for term in terms]
+_GEO_INDEX.sort(key=lambda x: -len(x[1]))        # ביטויים ארוכים קודם
+
+
+def geo_codes(text):
+    """אילו מדינות/גושים מוזכרים בטקסט. מחזיר set של קודי מדינה."""
+    t = (text or "").lower()
+    if not t.strip():
+        return set()
+    found = set()
+    for bloc, codes in GEO_BLOCS.items():
+        if term_in(t, bloc):
+            found |= codes
+    for code, term in _GEO_INDEX:
+        if term_in(t, term):
+            found.add(code)
+    return found
+
+
+def _hard_blocked(blob, allowed):
+    """ביטויי 'רק בארץ X' — חוסמים אם X אינו בשוק שנבחר."""
+    for key, phrases in GEO_HARD_BLOCK.items():
+        codes = _EU if key == "_EU" else {key}
+        if allowed & codes:
+            continue
+        for p in phrases:
+            if p in blob:
+                return p
+    return False
+
+
+def region_of(text, market):
+    """לאילו אזורים בתוך המדינה שייך המיקום. set ריק = לא זוהה."""
+    mk = _load_markets().get(market, {})
+    hit = set()
+    t = (text or "").lower()
+    for name, reg in (mk.get("regions") or {}).items():
+        if name == "all":
+            continue
+        for term in (reg.get("positive") or {}):
+            if term_in(t, term):
+                hit.add(name)
+                break
+    return hit
 
 
 def location_ok(job, prof):
     """
-    סינון קשיח לפי מיקום, כשהמשתמש ביקש זאת.
-    נבדק רק שדה המיקום, הכותרת וסוג המשרה — לא גוף המודעה, כי מודעה
-    בברלין שמזכירה "Europe" בתיאור אינה משרה באזור שביקשת.
+    סינון קשיח לפי מיקום.
+    "remote" ו-"hybrid" הן צורת עבודה ולא מיקום — הן לבדן לא מכשירות משרה.
+    מה שקובע הוא איזו מדינה מוזכרת בשדה המיקום ובכותרת:
+      • לא זוהתה מדינה           → נשארת (משרה גלובלית אמיתית)
+      • זוהתה מדינה שבשוק שנבחר  → נשארת
+      • זוהתה רק מדינה אחרת      → יוצאת
     """
     lr = prof["location_rules"]
     if not lr.get("strict"):
         return True
-    if not (job.get("location") or "").strip():
-        return True                      # אין שדה מיקום — לא פוסלים משרה בגללו
-    where = " ".join([job.get("location", ""), job.get("title", ""),
-                      job.get("employment_type", "")]).lower()
-    if any(h in where for h in REMOTE_HINTS):
+    allowed = lr.get("allowed_codes")
+    if not allowed:                      # remote_global — אין משמעות לסינון מדינה
         return True
-    return any(term_in(where, t) for t in lr["positive"])
+
+    where = " ".join([job.get("location", ""), job.get("title", "")])
+    found = geo_codes(where)
+
+    if found and not (found & allowed):
+        job["_loc_reason"] = "מדינה אחרת"
+        return False
+
+    blob = " ".join([job.get("location", ""), job.get("title", ""),
+                     job.get("employment_type", ""), job.get("desc", "")]).lower()
+    hb = _hard_blocked(blob, allowed)
+    if hb:
+        job["_loc_reason"] = f"מוגבל ל\"{hb}\""
+        return False
+
+    # אזור בתוך המדינה — נאכף רק אם המשתמש בחר אזור מסוים והעיר זוהתה
+    reg = lr.get("region")
+    if reg and reg != "all" and (found & allowed):
+        hit = region_of(job.get("location", ""), lr.get("market", ""))
+        if hit and reg not in hit:
+            job["_loc_reason"] = "אזור אחר בארץ"
+            return False
+    return True
 
 
 def job_allowed(job, prof):
@@ -1190,8 +1460,19 @@ def score(job, prof, now=None):
     lr = prof["location_rules"]
     p, n = _hits(head + " " + blob[:1500], lr["positive"]), _hits(blob, lr["negative"])
     raw = (max(p.values()) if p else 0) + sum(n.values())
+    # מדינה: גם כשהסינון הקשיח כבוי, משרה במדינה אחרת יורדת בדירוג ומסומנת
+    allowed, foreign = lr.get("allowed_codes"), False
+    if allowed:
+        codes = geo_codes(job["location"] + " " + job["title"])
+        if codes and not (codes & allowed):
+            foreign, raw = True, raw - 30
+        elif codes:
+            raw = max(raw, 18) + 2       # עיר בארץ שנבחרה שווה לפחות כמו "israel"
+    job["off_market"] = foreign
     bd["location"] = max(-lr["weight"], min(lr["weight"], raw * lr["weight"] / 25.0))
-    if p:
+    if foreign:
+        why.append("⚠ מדינה אחרת: " + (job["location"] or job["title"])[:40])
+    elif p:
         why.append("מיקום: " + max(p, key=p.get))
     if n:
         why.append("⚠ " + ", ".join(list(n)[:2]))
@@ -1271,10 +1552,16 @@ def search(prof, min_score=35, limit=300, use_ats=True, use_boards=True,
     now = datetime.now(timezone.utc)
     kept = [j for j in raw if title_ok(j, prof) and job_allowed(j, prof)]
     if prof["location_rules"].get("strict"):
-        before = len(kept)
-        kept = [j for j in kept if location_ok(j, prof)]
-        if before - len(kept):
-            log(f"סוננו {before - len(kept)} משרות מחוץ לאזור שנבחר.")
+        passed, dropped = [], Counter()
+        for j in kept:
+            if location_ok(j, prof):
+                passed.append(j)
+            else:
+                dropped[j.get("_loc_reason", "מחוץ לאזור")] += 1
+        if dropped:
+            why = ", ".join(f"{k}: {v}" for k, v in dropped.most_common())
+            log(f"סוננו {sum(dropped.values())} משרות מחוץ לאזור שנבחר ({why}).")
+        kept = passed
     out = [score(j, prof, now) for j in kept]
     out = dedupe([j for j in out if j["score"] >= min_score])[:limit]
     log(f"נשארו {len(out)} משרות רלוונטיות.")

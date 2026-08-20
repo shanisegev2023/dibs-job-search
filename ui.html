@@ -588,8 +588,9 @@ function card(j){
   if(bd.domain>0)   parts.push(`תחום ${Math.round(bd.domain)}`);
   if(bd.location>0) parts.push(`מיקום ${Math.round(bd.location)}`);
   const warns = (j.reasons||[]).filter(r=>r.startsWith("⚠"));
-  const badLoc   = warns.some(r=>!r.includes("סוג העסקה"));
   const badScope = warns.some(r=>r.includes("סוג העסקה"));
+  const offMkt   = warns.some(r=>r.includes("מדינה אחרת"));
+  const badLoc   = !offMkt && warns.some(r=>!r.includes("סוג העסקה"));
   return `<div class="job${st==="rejected"?" done":""}">
    <div class="jtop">
     <div style="flex:1;min-width:0">
@@ -601,6 +602,7 @@ function card(j){
         ${j.rate?`<span class="tag">${esc(j.rate)}</span>`:""}
         ${j.posted?`<span class="tag">${fmtDate(j.posted)}</span>`:""}
         <span class="tag">${esc((j.source||"").split(":")[0])}</span>
+        ${offMkt?'<span class="tag bad">⚠ מחוץ לאזור שנבחר</span>':""}
         ${badLoc?'<span class="tag bad">⚠ הגבלת מיקום</span>':""}
         ${badScope?'<span class="tag bad">⚠ לא סוג ההעסקה שביקשת</span>':""}
         ${st==="applied"?'<span class="tag" style="color:var(--success-text);border-color:var(--success-text)">✓ הגשתי</span>':""}
