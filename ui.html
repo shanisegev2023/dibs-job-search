@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<!-- JobDibs — local job search.  Copyright (C) 2026 Shani Segev
+     Licensed under the GNU AGPL-3.0. See LICENSE and NOTICE. -->
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JobDibs</title>
+<style>
+:root{
+  color-scheme: light;
+  --plane:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s7:#4a3aa7;
+  --crit:#d03b3b; --track:#cde2fb; --fill:#2a78d6; --success-text:#006300;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0d0d; --surface:#1a1a19;
+  --ink:#fff; --ink-2:#c3c2b7; --ink-muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s7:#9085e9;
+  --crit:#d03b3b; --track:#184f95; --fill:#3987e5; --success-text:#0ca30c;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --plane:#0d0d0d; --surface:#1a1a19;
+    --ink:#fff; --ink-2:#c3c2b7; --ink-muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s7:#9085e9;
+    --track:#184f95; --fill:#3987e5; --success-text:#0ca30c;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 20px 80px}
+a{color:inherit}
+h1{font-size:23px;font-weight:650;margin:0 0 3px;letter-spacing:-.01em}
+h2{font-size:12px;font-weight:650;margin:0 0 12px;color:var(--ink-2);
+  text-transform:uppercase;letter-spacing:.06em}
+.sub{color:var(--ink-2);font-size:13px;margin:0}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.tbtn{background:var(--surface);border:1px solid var(--ring);color:var(--ink-2);
+  border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.tbtn:hover{color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg>label{font-size:11.5px;color:var(--ink-2)}
+input,select,textarea,button{font-family:inherit}
+input[type=text],input[type=search],select,textarea{background:var(--plane);
+  border:1px solid var(--axis);color:var(--ink);border-radius:8px;padding:8px 11px;
+  font-size:13.5px;min-width:170px}
+textarea{width:100%;min-height:120px;resize:vertical;line-height:1.5}
+input[type=range]{accent-color:var(--fill);width:160px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{border:1px solid var(--axis);background:var(--plane);color:var(--ink-2);border-radius:999px;
+  padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:6px}
+.chip:hover{color:var(--ink)}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.85;flex:none}
+.chip .x{opacity:.5;font-weight:700}
+.chip.role{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn{background:var(--ink);color:var(--surface);border:1px solid var(--ink);border-radius:9px;
+  padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--axis);font-weight:400;
+  padding:7px 13px;font-size:13px}
+.btn.ghost:hover{color:var(--ink)}
+.drop{border:1.5px dashed var(--axis);border-radius:10px;padding:20px;text-align:center;
+  color:var(--ink-2);font-size:13.5px;cursor:pointer;transition:.12s}
+.drop:hover,.drop.over{border-color:var(--fill);color:var(--ink)}
+.drop b{color:var(--ink)}
+.hint{font-size:12px;color:var(--ink-muted);margin:6px 0 0}
+.warn{font-size:12.5px;color:var(--crit);margin:8px 0 0}
+.pv{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{font-size:11.5px;border-radius:6px;padding:2.5px 8px;border:1px solid var(--ring);
+  color:var(--ink-2);background:var(--plane)}
+.log{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+  display:grid;gap:3px;max-height:210px;overflow:auto}
+.log div::before{content:"› ";color:var(--ink-muted)}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--axis);
+  border-top-color:var(--fill);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:14px 16px}
+.tile .lab{font-size:12px;color:var(--ink-2);margin-bottom:5px}
+.tile .val{font-size:30px;font-weight:640;letter-spacing:-.02em;line-height:1.05}
+.tile .val.hero{font-size:44px}
+.tile .sublab{font-size:11.5px;color:var(--ink-muted);margin-top:3px}
+/* jobs */
+.count{font-size:12.5px;color:var(--ink-2);margin:0 2px 10px}
+.job{background:var(--surface);border:1px solid var(--ring);border-radius:12px;
+  padding:15px 17px;margin-bottom:9px}
+.job:hover{border-color:var(--axis)}
+.job.done{opacity:.42}
+.jtop{display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
+.jtitle{font-size:16px;font-weight:600;margin:0 0 3px}
+.jtitle a{text-decoration:none}.jtitle a:hover{text-decoration:underline}
+.jmeta{font-size:13px;color:var(--ink-2);margin:0}
+.jmeta b{font-weight:600;color:var(--ink)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.tag{font-size:11.5px;border-radius:6px;padding:2.5px 8px;border:1px solid var(--ring);
+  color:var(--ink-2);background:var(--plane);display:inline-flex;align-items:center;gap:5px}
+.tag .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.tag.new{border-color:var(--success-text);color:var(--success-text);font-weight:600}
+.tag.bad{border-color:var(--crit);color:var(--crit)}
+.why{font-size:12.5px;color:var(--ink-muted);margin:9px 0 0;overflow-wrap:anywhere}
+.score{flex:none;width:112px;text-align:center}
+.score .num{font-size:26px;font-weight:640;line-height:1.1}
+.score .cap{font-size:10.5px;color:var(--ink-muted);letter-spacing:.04em;margin-bottom:5px}
+.meter{height:6px;border-radius:3px;background:var(--track);overflow:hidden;margin-top:6px}
+.meter>i{display:block;height:100%;border-radius:3px;background:var(--fill)}
+.bd{font-size:10.5px;color:var(--ink-muted);margin-top:5px;font-variant-numeric:tabular-nums}
+.acts{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
+.act{font-size:12px;border:1px solid var(--axis);background:var(--plane);color:var(--ink-2);
+  border-radius:7px;padding:4px 10px;cursor:pointer}
+.act:hover{color:var(--ink)}
+.act[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.act.apply{border-color:var(--fill);color:var(--fill);font-weight:600;text-decoration:none}
+.empty{padding:34px;text-align:center;color:var(--ink-2);background:var(--surface);
+  border:1px dashed var(--axis);border-radius:12px}
+.hidden{display:none!important}
+#results.stale{opacity:.35;pointer-events:none;transition:opacity .2s}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--grid);
+  font-size:12px;color:var(--ink-muted);display:grid;gap:5px}
+@media (max-width:640px){
+  .jtop{flex-direction:column-reverse;align-items:stretch}
+  .score{width:auto;display:flex;align-items:center;gap:10px}
+  .score .meter{flex:1;margin-top:0}.score .cap{margin:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>JobDibs</h1>
+    <p class="sub">קוראים דיבס על המשרה לפני כולם. קורות חיים + כותרת תפקיד ← משרות מדורגות, הכול מקומית.</p>
+  </div>
+  <button class="tbtn" id="theme">☾ מצב כהה</button>
+</header>
+
+<!-- ══ הגדרות ══ -->
+<div class="card" id="setup">
+  <h2>הגדרת חיפוש</h2>
+
+  <div class="row" style="margin-bottom:16px">
+    <div class="fg">
+      <label for="saved">חיפוש שמור</label>
+      <select id="saved"><option value="">— חדש —</option></select>
+    </div>
+    <button class="btn ghost" id="saveProf">שמירת חיפוש</button>
+    <button class="btn ghost" id="delProf">מחיקה</button>
+  </div>
+
+  <div class="fg" style="margin-bottom:16px">
+    <label>כותרות תפקיד שמעניינות אותך</label>
+    <div class="chips" id="roleChips"></div>
+    <div class="chips" style="margin-top:2px">
+      <input type="text" id="roleInput" placeholder="Product Manager… (Enter להוספה)" style="min-width:260px">
+    </div>
+    <p class="hint">כל כותרת מתורגמת אוטומטית לכל הווריאנטים שמופיעים במודעות — Senior, Lead, Head of, Owner, וגם בעברית.</p>
+  </div>
+
+  <div class="fg" style="margin-bottom:16px">
+    <label>קורות חיים</label>
+    <div class="drop" id="drop">
+      גררי לכאן קובץ <b>PDF</b> · <b>DOCX</b> · <b>TXT</b> — או לחצי לבחירה
+      <input type="file" id="file" accept=".pdf,.docx,.txt,.md" class="hidden">
+    </div>
+    <p class="hint" id="cvInfo">עוד לא נטענו קורות חיים. <a href="#" id="pasteToggle" style="color:var(--s1)">או הדביקי טקסט ידנית</a></p>
+    <p class="warn hidden" id="cvWarn"></p>
+    <textarea id="cvText" class="hidden" dir="auto" placeholder="הדביקי כאן את תוכן קורות החיים…"></textarea>
+  </div>
+
+  <div class="row" style="margin-bottom:16px">
+    <div class="fg">
+      <label for="market">שוק</label>
+      <select id="market"></select>
+    </div>
+    <div class="fg" id="regionWrap">
+      <label for="region">אזור</label>
+      <select id="region"></select>
+    </div>
+    <div class="fg">
+      <label for="min">ניקוד מינימלי: <span id="minv">35</span></label>
+      <input type="range" id="min" min="0" max="90" value="35" step="5">
+    </div>
+    <div class="fg">
+      <label>מקורות</label>
+      <div class="chips">
+        <button class="chip" data-opt="use_boards" aria-pressed="true">לוחות ציבוריים</button>
+        <button class="chip" data-opt="use_ats" aria-pressed="true">לוחות גיוס של חברות</button>
+        <button class="chip" data-opt="auto_discover" aria-pressed="true">גילוי חברות אוטומטי</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:16px;align-items:flex-start">
+    <div class="fg" style="flex:1;min-width:280px">
+      <label>מילות מפתח להוספה</label>
+      <div class="chips" id="addChips"></div>
+      <input type="text" id="addInput" placeholder="Klaviyo, headless commerce… (Enter)" style="width:100%">
+      <p class="hint">מונחים שחשובים לך ולא בהכרח מופיעים בקו״ח. מקבלים את המשקל
+        המרבי בדירוג התחום.</p>
+    </div>
+    <div class="fg" style="flex:1;min-width:280px">
+      <label>מילים לסינון החוצה</label>
+      <div class="chips" id="exChips"></div>
+      <input type="text" id="exInput" placeholder="crypto, gambling… (Enter)" style="width:100%">
+      <p class="hint">משרה שמכילה אחת מהמילים האלה לא תוצג כלל — לא בציון נמוך,
+        פשוט לא תוצג.</p>
+    </div>
+  </div>
+
+  <div class="fg" style="margin-bottom:16px">
+    <label for="boardUrl">הוספת לוח של חברה ספציפית (Workday / Comeet)</label>
+    <div class="chips">
+      <input type="text" id="boardUrl" placeholder="הדביקי כתובת של דף קריירה" style="min-width:320px">
+      <button class="btn ghost" id="addBoard">הוספה</button>
+      <span class="hint" id="boardMsg" style="margin:0"></span>
+    </div>
+    <p class="hint">שתי המערכות האלה לא ניתנות לזיהוי משם החברה בלבד. מדביקים
+      פעם אחת את כתובת דף הקריירה, והן נכללות בכל ריצה מכאן והלאה.</p>
+  </div>
+
+  <div class="fg" style="margin-bottom:18px">
+    <label>סוג העסקה שאני מחפש/ת</label>
+    <div class="chips" id="scopeChips"></div>
+    <p class="hint">בחירה כאן קובעת מה יעלה למעלה — ומה יירד. משרה שהיא מסוג
+      אחר ממה שביקשתם מקבלת קנס בניקוד. בלי בחירה, כל סוגי ההעסקה נספרים שווה.</p>
+  </div>
+
+  <div id="preview" class="hidden" style="border-top:1px solid var(--grid);padding-top:14px;margin-bottom:16px">
+    <label style="font-size:11.5px;color:var(--ink-2)">מה זוהה בקורות החיים</label>
+    <div class="pv" id="pvBody"></div>
+  </div>
+
+  <button class="btn" id="go">חיפוש משרות</button>
+  <span class="hint" id="goHint" style="margin-right:10px"></span>
+</div>
+
+<!-- ══ התקדמות ══ -->
+<div class="card hidden" id="progress">
+  <h2><span class="spin" id="spin"></span> &nbsp;מריצה</h2>
+  <div class="log" id="log"></div>
+</div>
+
+<!-- ══ תוצאות ══ -->
+<div id="results" class="hidden">
+  <div class="tiles" id="tiles"></div>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+    <div class="fg" style="flex:1;min-width:220px">
+      <label for="q">חיפוש בתוצאות</label>
+      <input type="search" id="q" placeholder="Shopify, AI, חל״ד…" style="width:100%">
+    </div>
+    <div class="fg">
+      <label for="fsrc">מקור</label>
+      <select id="fsrc"></select>
+    </div>
+    <div class="fg">
+      <label for="sort">מיון</label>
+      <select id="sort">
+        <option value="score">ניקוד התאמה</option>
+        <option value="date">תאריך פרסום</option>
+        <option value="company">חברה</option>
+      </select>
+    </div>
+    <div class="fg" style="flex:1 0 100%">
+      <label>היקף</label>
+      <div class="chips" id="fscopes"></div>
+    </div>
+  </div>
+  <p class="count" id="count"></p>
+  <div id="list"></div>
+</div>
+
+<footer>
+  <div id="foot"></div>
+  <div>קבצי קורות החיים לא עוזבים את המחשב שלך. הפנייה החוצה היחידה היא ללוחות המשרות עצמם.</div>
+  <div>מקורות משרות בזכות
+    <a href="https://remoteok.com" rel="dofollow">RemoteOK</a> ·
+    <a href="https://remotive.com" rel="dofollow">Remotive</a> ·
+    <a href="https://himalayas.app" rel="dofollow">Himalayas</a> ·
+    <a href="https://jobicy.com" rel="dofollow">Jobicy</a> ·
+    <a href="https://weworkremotely.com" rel="dofollow">We Work Remotely</a> ·
+    <a href="https://www.arbeitnow.com" rel="dofollow">Arbeitnow</a> ·
+    <a href="https://www.workingnomads.com" rel="dofollow">Working Nomads</a>
+  </div>
+</footer>
+
+</div>
+
+<script>
+const GROUPS = {
+  flex:     {color:"var(--s1)", he:"גמיש / תחום בזמן"},
+  standard: {color:"var(--s2)", he:"קבוע"},
+  early:    {color:"var(--s3)", he:"תחילת דרך"},
+  none:     {color:"var(--axis)", he:"לא ידוע"}
+};
+const SCOPES = {
+  "fractional":     {he:"פרקשנל",              g:"flex",     rank:1},
+  "part-time":      {he:"משרה חלקית",          g:"flex",     rank:2},
+  "maternity-cover":{he:"החלפה לחל״ד",         g:"flex",     rank:3},
+  "interim":        {he:"אינטרים",             g:"flex",     rank:4},
+  "freelance":      {he:"פרילנס / ייעוץ",      g:"flex",     rank:5},
+  "contract":       {he:"חוזה / קבלנות",       g:"flex",     rank:6},
+  "shift":          {he:"משמרות / שעתי",       g:"flex",     rank:7},
+  "student":        {he:"סטודנטים / התמחות",   g:"early",    rank:8},
+  "entry-level":    {he:"משרת כניסה / ג׳וניור", g:"early",    rank:9},
+  "full-time":      {he:"משרה מלאה",           g:"standard", rank:10},
+  "hybrid":         {he:"היברידי",             g:"standard", rank:11},
+  "unknown":        {he:"לא צוין",             g:"none",     rank:12}
+};
+const colorOf = k => GROUPS[(SCOPES[k]||SCOPES.unknown).g].color;
+const FLEX = new Set(Object.keys(SCOPES).filter(k => SCOPES[k].g === "flex"));
+
+// סוגי ההעסקה שאפשר לבחור — חייב להתאים למפתחות ב-SCOPE_FAMILIES שב-engine.py
+const PREF_SCOPES = ["full-time","part-time","fractional","freelance","contract",
+                     "maternity-cover","interim","student","entry-level","shift"];
+
+const S = { roles:[], cvText:"", cvName:"", scopes:new Set(), extra:[], exclude:[],
+            opts:{use_boards:true, use_ats:true, auto_discover:true},
+            jobs:[], meta:{}, status:{},
+            F:{q:"",src:"",sort:"score"}, fscopes:new Set() };
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const post = (u,b) => fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},
+                              body:JSON.stringify(b)}).then(r=>r.json());
+
+/* theme */
+$("#theme").onclick = () => {
+  const dark = document.documentElement.getAttribute("data-theme")==="dark"
+    || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.setAttribute("data-theme", dark?"light":"dark");
+  $("#theme").textContent = dark ? "☾ מצב כהה" : "☀ מצב בהיר";
+};
+
+/* ── roles ── */
+function drawRoles(){
+  $("#roleChips").innerHTML = S.roles.map((r,i)=>
+    `<button class="chip role" data-ri="${i}">${esc(r)} <span class="x">×</span></button>`).join("")
+    || `<span class="hint">אין עדיין כותרות תפקיד</span>`;
+  $$("[data-ri]").forEach(b=>b.onclick=()=>{S.roles.splice(+b.dataset.ri,1);drawRoles();preview();});
+}
+$("#roleInput").addEventListener("keydown", e => {
+  if(e.key==="Enter" && e.target.value.trim()){
+    e.preventDefault();
+    e.target.value.split(",").map(x=>x.trim()).filter(Boolean).forEach(r=>{
+      if(!S.roles.includes(r)) S.roles.push(r); });
+    e.target.value=""; drawRoles(); preview();
+  }
+});
+
+/* ── keyword chips ── */
+function kwChips(listKey, chipsEl, inputEl){
+  const draw = () => {
+    $(chipsEl).innerHTML = S[listKey].map((t,i)=>
+      `<button class="chip role" data-kw="${listKey}" data-i="${i}">${esc(t)} <span class="x">×</span></button>`
+    ).join("");
+    $$(`[data-kw="${listKey}"]`).forEach(b=>b.onclick=()=>{
+      S[listKey].splice(+b.dataset.i,1); draw(); preview(); });
+  };
+  $(inputEl).addEventListener("keydown", e => {
+    if(e.key!=="Enter" || !e.target.value.trim()) return;
+    e.preventDefault();
+    e.target.value.split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)
+      .forEach(t=>{ if(!S[listKey].includes(t)) S[listKey].push(t); });
+    e.target.value=""; draw(); preview();
+  });
+  return draw;
+}
+const drawExtra = kwChips("extra", "#addChips", "#addInput");
+const drawExcl  = kwChips("exclude", "#exChips", "#exInput");
+
+/* ── scope prefs ── */
+$("#scopeChips").innerHTML = PREF_SCOPES.map(s=>
+  `<button class="chip" data-sc="${s}" aria-pressed="false">
+     <span class="dot" style="background:${colorOf(s)}"></span>${SCOPES[s].he}</button>`).join("");
+$$("[data-sc]").forEach(b=>b.onclick=()=>{
+  const s=b.dataset.sc;
+  S.scopes.has(s)?S.scopes.delete(s):S.scopes.add(s);
+  b.setAttribute("aria-pressed", S.scopes.has(s));
+});
+
+/* ── source opts ── */
+$$("[data-opt]").forEach(b=>b.onclick=()=>{
+  const o=b.dataset.opt; S.opts[o]=!S.opts[o]; b.setAttribute("aria-pressed",S.opts[o]);
+});
+
+/* ── add a named board ── */
+$("#addBoard").onclick = async () => {
+  const url = $("#boardUrl").value.trim();
+  if(!url) return;
+  const r = await post("/api/learn-board", {url});
+  $("#boardMsg").textContent = r.ok
+    ? `✓ נוסף ${r.kind === "workday" ? "Workday" : "Comeet"}: ${r.entry.name}`
+    : r.error;
+  if(r.ok) $("#boardUrl").value = "";
+};
+$("#boardUrl").addEventListener("keydown", e => { if(e.key==="Enter"){e.preventDefault();$("#addBoard").click();} });
+
+/* ── min score ── */
+$("#min").oninput = e => $("#minv").textContent = e.target.value;
+
+/* ── CV ── */
+$("#drop").onclick = () => $("#file").click();
+["dragover","dragenter"].forEach(ev=>$("#drop").addEventListener(ev,e=>{
+  e.preventDefault(); $("#drop").classList.add("over"); }));
+["dragleave","drop"].forEach(ev=>$("#drop").addEventListener(ev,e=>{
+  e.preventDefault(); $("#drop").classList.remove("over"); }));
+$("#drop").addEventListener("drop", e => { if(e.dataTransfer.files[0]) loadCV(e.dataTransfer.files[0]); });
+$("#file").onchange = e => { if(e.target.files[0]) loadCV(e.target.files[0]); };
+$("#pasteToggle").onclick = e => { e.preventDefault(); $("#cvText").classList.toggle("hidden"); $("#cvText").focus(); };
+$("#cvText").oninput = e => { S.cvText = e.target.value; S.cvName = S.cvName||"טקסט שהודבק";
+  $("#cvInfo").textContent = `${e.target.value.length.toLocaleString()} תווים`; preview(); };
+
+function loadCV(f){
+  $("#cvInfo").innerHTML = `<span class="spin"></span> קורא את ${esc(f.name)}…`;
+  const rd = new FileReader();
+  rd.onload = async () => {
+    const b64 = rd.result.split(",")[1];
+    const r = await post("/api/parse-cv", {data_b64:b64, filename:f.name});
+    S.cvText = r.text || ""; S.cvName = f.name;
+    $("#cvText").value = S.cvText;
+    $("#cvInfo").innerHTML = r.chars > 100
+      ? `<b>${esc(f.name)}</b> — ${r.chars.toLocaleString()} תווים נקראו. <a href="#" id="pt2" style="color:var(--s1)">עריכה</a>`
+      : `<b>${esc(f.name)}</b> — לא הצלחתי לחלץ טקסט.`;
+    const pt2=$("#pt2"); if(pt2) pt2.onclick=e=>{e.preventDefault();$("#cvText").classList.toggle("hidden")};
+    if(r.warning){ $("#cvWarn").textContent = r.warning; $("#cvWarn").classList.remove("hidden");
+                   $("#cvText").classList.remove("hidden"); }
+    else $("#cvWarn").classList.add("hidden");
+    preview();
+  };
+  rd.readAsDataURL(f);
+}
+
+/* ── profile preview ── */
+let pvTimer;
+function preview(){
+  clearTimeout(pvTimer);
+  pvTimer = setTimeout(async () => {
+    if(!S.cvText && !S.roles.length){ $("#preview").classList.add("hidden"); return; }
+    const r = await post("/api/preview-profile", {
+      cv_text:S.cvText, roles:S.roles, market:$("#market").value,
+      region:$("#region").value, scopes:[...S.scopes],
+      extra_terms:S.extra, exclude_terms:S.exclude});
+    const lvl = {junior:"ג׳וניור",mid:"מיד-לבל",senior:"סניור",leader:"הנהלה"}[r.level]||r.level;
+    $("#pvBody").innerHTML =
+      `<span class="pill">רמה: <b>${lvl}</b></span>` +
+      (r.region_label ? `<span class="pill">אזור: <b>${esc(r.region_label)}</b></span>` : "") +
+      (r.years?`<span class="pill">${r.years} שנות ניסיון</span>`:"") +
+      `<span class="pill">${r.titles.length} ווריאנטים של כותרת</span>` +
+      `<span class="pill">${r.companies_seed} חברות התנעה</span>` +
+      (r.added||[]).map(t=>`<span class="pill" style="border-color:var(--s3);color:var(--s3)">+ ${esc(t)}</span>`).join("") +
+      (r.excluded||[]).map(t=>`<span class="pill" style="border-color:var(--crit);color:var(--crit)">− ${esc(t)}</span>`).join("") +
+      r.domains.slice(0,18).filter(([t])=>!(r.added||[]).includes(t))
+        .map(([t,w])=>`<span class="pill">${esc(t)}</span>`).join("");
+    $("#preview").classList.remove("hidden");
+  }, 350);
+}
+function fillRegions(){
+  const m = MARKETS[$("#market").value] || {};
+  const regs = m.regions || {};
+  const keys = Object.keys(regs);
+  $("#regionWrap").style.display = keys.length > 1 ? "" : "none";
+  $("#region").innerHTML = keys.map(k =>
+    `<option value="${esc(k)}">${esc(regs[k])}</option>`).join("");
+}
+$("#market").onchange = () => { fillRegions(); preview(); };
+$("#region").onchange = preview;
+
+/* ── search ── */
+$("#go").onclick = async () => {
+  if(!S.roles.length){ $("#goHint").textContent = "צריך לפחות כותרת תפקיד אחת."; return; }
+  $("#goHint").textContent=""; $("#go").disabled = true;
+  $("#progress").classList.remove("hidden"); $("#log").innerHTML=""; $("#spin").classList.remove("hidden");
+  $("#results").classList.add("stale");
+  const {run_id} = await post("/api/search", {
+    cv_text:S.cvText, roles:S.roles, market:$("#market").value,
+    region:$("#region").value, scopes:[...S.scopes],
+    extra_terms:S.extra, exclude_terms:S.exclude,
+    min_score:+$("#min").value, ...S.opts});
+  poll(run_id);
+};
+
+function poll(id){
+  fetch("/api/progress?id="+id).then(r=>r.json()).then(r=>{
+    $("#log").innerHTML = r.lines.map(l=>`<div>${esc(l)}</div>`).join("");
+    $("#log").scrollTop = 1e6;
+    if(!r.done) return setTimeout(()=>poll(id), 700);
+    $("#spin").classList.add("hidden"); $("#go").disabled = false;
+    if(r.error){ $("#goHint").textContent = r.error; return; }
+    show(r.result);
+  }).catch(()=>setTimeout(()=>poll(id),1500));
+}
+
+/* ── results ── */
+function show(res){
+  $("#results").classList.remove("stale");
+  S.jobs = res.jobs; S.meta = res.meta;
+  S.jobs.forEach(j=>{ if(j.status && j.status!=="new") S.status[j.url]=j.status; });
+  $("#results").classList.remove("hidden");
+
+  const flex = S.jobs.filter(j=>FLEX.has(j.scope_tag));
+  const top = S.jobs.length ? Math.max(...S.jobs.map(j=>j.score)) : 0;
+  $("#tiles").innerHTML = [
+    {l:"התאמה הגבוהה ביותר", v:top, n:"מתוך 100", hero:true},
+    {l:"היקף גמיש", v:flex.length, n:"חלקי · פרקשנל · פרילנס · חל״ד"},
+    {l:"חדשות היום", v:S.jobs.filter(j=>j.is_new).length, n:"לא היו בריצה קודמת"},
+    {l:"מקורות פעילים", v:(S.meta.sources||[]).length, n:"לוחות שהחזירו משרות"},
+    {l:"סה״כ רלוונטיות", v:S.jobs.length, n:(S.meta.roles||[]).join(" · ")}
+  ].map(r=>`<div class="tile"><div class="lab">${esc(r.l)}</div>
+    <div class="val${r.hero?" hero":""}">${r.v}</div>
+    <div class="sublab">${esc(r.n)}</div></div>`).join("");
+
+  const counts={}; S.jobs.forEach(j=>counts[j.scope_tag]=(counts[j.scope_tag]||0)+1);
+  $("#fscopes").innerHTML = Object.keys(counts).sort((a,b)=>(SCOPES[a]?.rank||99)-(SCOPES[b]?.rank||99))
+    .map(s=>`<button class="chip" data-fs="${s}" aria-pressed="false">
+      <span class="dot" style="background:${colorOf(s)}"></span>
+      ${SCOPES[s]?.he||s} <span style="opacity:.6">${counts[s]}</span></button>`).join("");
+  $$("[data-fs]").forEach(b=>b.onclick=()=>{
+    const s=b.dataset.fs; S.fscopes.has(s)?S.fscopes.delete(s):S.fscopes.add(s);
+    b.setAttribute("aria-pressed",S.fscopes.has(s)); draw(); });
+
+  const srcs=[...new Set(S.jobs.map(j=>(j.source||"").split(":")[0]))].sort();
+  $("#fsrc").innerHTML = '<option value="">כל המקורות</option>'+srcs.map(s=>`<option>${esc(s)}</option>`).join("");
+  $("#foot").textContent = `עודכן ${S.meta.generated_at} · מקורות: ${(S.meta.sources||[]).slice(0,14).join(" · ")}`;
+  draw();
+  $("#results").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+$("#q").oninput    = e => { S.F.q=e.target.value.toLowerCase(); draw(); };
+$("#fsrc").onchange= e => { S.F.src=e.target.value; draw(); };
+$("#sort").onchange= e => { S.F.sort=e.target.value; draw(); };
+
+function draw(){
+  let out = S.jobs.filter(j=>{
+    if(S.F.src && !(j.source||"").startsWith(S.F.src)) return false;
+    if(S.fscopes.size && !S.fscopes.has(j.scope_tag)) return false;
+    if(S.F.q){
+      const b=[j.title,j.company,j.location,j.source,j.employment_type,j.rate,
+               (j.reasons||[]).join(" ")].join(" ").toLowerCase();
+      if(!b.includes(S.F.q)) return false;
+    }
+    return true;
+  });
+  out.sort((a,b)=> S.F.sort==="date" ? (new Date(b.posted||0)-new Date(a.posted||0))
+                 : S.F.sort==="company" ? String(a.company).localeCompare(String(b.company),"he")
+                 : b.score-a.score);
+  $("#count").textContent = `${out.length} משרות מוצגות${out.length!==S.jobs.length?` (מתוך ${S.jobs.length})`:""}`;
+  $("#list").innerHTML = out.length ? out.map(card).join("")
+    : `<div class="empty">אין תוצאות לסינון הזה.</div>`;
+  $$("[data-st]").forEach(b=>b.onclick=()=>{
+    const {url,st}=b.dataset;
+    S.status[url] = S.status[url]===st ? undefined : st;
+    post("/api/set-status",{url, status:S.status[url]||null});
+    draw();
+  });
+}
+
+function fmtDate(s){
+  if(!s) return ""; const d=new Date(s); if(isNaN(d)) return "";
+  const n=Math.round((Date.now()-d)/864e5);
+  return n<=0?"היום":n===1?"אתמול":n<30?`לפני ${n} ימים`:d.toLocaleDateString("he-IL");
+}
+
+function card(j){
+  const m = SCOPES[j.scope_tag] || SCOPES.unknown, st = S.status[j.url], bd = j.breakdown||{};
+  const mColor = colorOf(j.scope_tag);
+  const parts = [];
+  if(bd.scope>0)    parts.push(`היקף ${Math.round(bd.scope)}`);
+  if(bd.domain>0)   parts.push(`תחום ${Math.round(bd.domain)}`);
+  if(bd.location>0) parts.push(`מיקום ${Math.round(bd.location)}`);
+  const warns = (j.reasons||[]).filter(r=>r.startsWith("⚠"));
+  const badLoc   = warns.some(r=>!r.includes("סוג העסקה"));
+  const badScope = warns.some(r=>r.includes("סוג העסקה"));
+  return `<div class="job${st==="rejected"?" done":""}">
+   <div class="jtop">
+    <div style="flex:1;min-width:0">
+      <p class="jtitle"><a href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.title)}</a></p>
+      <p class="jmeta"><b>${esc(j.company)}</b>${j.location?" · "+esc(j.location):""}</p>
+      <div class="tags">
+        <span class="tag"><span class="dot" style="background:${mColor}"></span>${m.he}</span>
+        ${j.is_new?'<span class="tag new">✦ חדש</span>':""}
+        ${j.rate?`<span class="tag">${esc(j.rate)}</span>`:""}
+        ${j.posted?`<span class="tag">${fmtDate(j.posted)}</span>`:""}
+        <span class="tag">${esc((j.source||"").split(":")[0])}</span>
+        ${badLoc?'<span class="tag bad">⚠ הגבלת מיקום</span>':""}
+        ${badScope?'<span class="tag bad">⚠ לא סוג ההעסקה שביקשת</span>':""}
+        ${st==="applied"?'<span class="tag" style="color:var(--success-text);border-color:var(--success-text)">✓ הגשתי</span>':""}
+        ${st==="shortlist"?'<span class="tag" style="color:var(--s1);border-color:var(--s1)">★ דיבס</span>':""}
+      </div>
+      ${(j.reasons||[]).length?`<p class="why">${esc(j.reasons.join(" · "))}</p>`:""}
+      <div class="acts">
+        <a class="act apply" href="${esc(j.url)}" target="_blank" rel="noopener">↗ למודעה</a>
+        <button class="act" data-st="shortlist" data-url="${esc(j.url)}" aria-pressed="${st==="shortlist"}">★ דיבס</button>
+        <button class="act" data-st="applied"   data-url="${esc(j.url)}" aria-pressed="${st==="applied"}">✓ הגשתי</button>
+        <button class="act" data-st="rejected"  data-url="${esc(j.url)}" aria-pressed="${st==="rejected"}">✕ לא רלוונטי</button>
+      </div>
+    </div>
+    <div class="score">
+      <div class="cap">התאמה</div><div class="num">${j.score}</div>
+      <div class="meter"><i style="width:${Math.max(3,j.score)}%"></i></div>
+      <div class="bd">${parts.join(" · ")||"—"}</div>
+    </div>
+   </div></div>`;
+}
+
+/* ── saved profiles ── */
+$("#saveProf").onclick = async () => {
+  const name = prompt("שם לחיפוש הזה:", S.roles[0] || "החיפוש שלי");
+  if(!name) return;
+  const r = await post("/api/save-profile", {name, roles:S.roles, market:$("#market").value,
+    region:$("#region").value,
+    scopes:[...S.scopes], extra_terms:S.extra, exclude_terms:S.exclude,
+    min_score:+$("#min").value, cv_text:S.cvText, cv_name:S.cvName});
+  fillProfiles(r.profiles, name);
+};
+$("#delProf").onclick = async () => {
+  const n = $("#saved").value; if(!n) return;
+  const r = await post("/api/delete-profile", {name:n});
+  fillProfiles(r.profiles, "");
+};
+$("#saved").onchange = e => {
+  const p = PROFS[e.target.value]; if(!p) return;
+  S.roles = p.roles||[]; S.cvText = p.cv_text||""; S.cvName = p.cv_name||"";
+  S.scopes = new Set(p.scopes||[]);
+  S.extra = p.extra_terms||[]; S.exclude = p.exclude_terms||[];
+  $("#market").value = p.market||"israel"; fillRegions();
+  $("#region").value = p.region||"all";
+  $("#min").value = p.min_score||35; $("#minv").textContent = $("#min").value;
+  $("#cvText").value = S.cvText;
+  $("#cvInfo").innerHTML = S.cvText ? `<b>${esc(S.cvName||"קו״ח")}</b> — ${S.cvText.length.toLocaleString()} תווים` : "אין קו״ח";
+  $$("[data-sc]").forEach(b=>b.setAttribute("aria-pressed", S.scopes.has(b.dataset.sc)));
+  drawRoles(); drawExtra(); drawExcl(); preview();
+};
+
+let PROFS = {}, MARKETS = {};
+function fillProfiles(p, sel){
+  PROFS = p||{};
+  $("#saved").innerHTML = '<option value="">— חדש —</option>' +
+    Object.keys(PROFS).map(n=>`<option${n===sel?" selected":""}>${esc(n)}</option>`).join("");
+}
+
+/* ── boot ── */
+fetch("/api/bootstrap").then(r=>r.json()).then(b=>{
+  MARKETS = b.markets || {};
+  $("#market").innerHTML = Object.entries(MARKETS)
+    .map(([k,v])=>`<option value="${esc(k)}"${k==="israel"?" selected":""}>${esc(v.label)}</option>`).join("");
+  fillRegions();
+  fillProfiles(b.profiles, "");
+  $("#goHint").textContent = b.discovered ? `${b.discovered} לוחות גיוס כבר מוכרים במטמון` : "";
+  drawRoles(); drawExtra(); drawExcl();
+  if(b.last && b.last.jobs && b.last.jobs.length){
+    show(b.last);
+    $("#foot").textContent += " · (תוצאות הריצה האחרונה)";
+  }
+});
+</script>
+</body>
+</html>

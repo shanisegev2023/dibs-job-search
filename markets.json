@@ -1,0 +1,588 @@
+{
+  "_comment": "שווקים ואזורים. 'companies' = רשימת התנעה בלבד — הכלי מגלה חברות נוספות לבד ושומר אותן ב-data/discovered.json. כל שוק יכול להגדיר 'regions'; האזור שנבחר מתמזג מעל המשקלים של השוק.",
+  "israel": {
+    "label": "ישראל",
+    "positive": {
+      "israel": 14,
+      "ישראל": 14,
+      "hybrid": 14,
+      "היברידי": 14,
+      "remote": 16,
+      "מרחוק": 16,
+      "עבודה מהבית": 14,
+      "anywhere": 20,
+      "worldwide": 20,
+      "emea": 18,
+      "europe": 10,
+      "global": 10
+    },
+    "negative": {
+      "united states only": -40,
+      "us only": -40,
+      "usa only": -40,
+      "must be located in the us": -45,
+      "us work authorization": -45,
+      "authorized to work in the united states": -45,
+      "united kingdom only": -30,
+      "canada only": -35,
+      "australia only": -35,
+      "india only": -35
+    },
+    "regions": {
+      "all": {
+        "label": "כל הארץ",
+        "positive": {},
+        "negative": {}
+      },
+      "merkaz": {
+        "label": "גוש דן ומרכז",
+        "positive": {
+          "tel aviv": 25,
+          "tel-aviv": 25,
+          "תל אביב": 25,
+          "תל־אביב": 25,
+          "ramat gan": 22,
+          "רמת גן": 22,
+          "givatayim": 20,
+          "גבעתיים": 20,
+          "bnei brak": 20,
+          "בני ברק": 20,
+          "petah tikva": 20,
+          "פתח תקווה": 20,
+          "holon": 18,
+          "חולון": 18,
+          "bat yam": 16,
+          "בת ים": 16,
+          "rishon": 18,
+          "ראשון לציון": 18,
+          "ראשל\"צ": 18,
+          "or yehuda": 16,
+          "אור יהודה": 16,
+          "מרכז": 18,
+          "גוש דן": 20
+        },
+        "negative": {
+          "eilat": -18,
+          "אילת": -18,
+          "beer sheva": -10,
+          "באר שבע": -10
+        }
+      },
+      "sharon": {
+        "label": "השרון",
+        "positive": {
+          "herzliya": 25,
+          "הרצליה": 25,
+          "raanana": 24,
+          "רעננה": 24,
+          "kfar saba": 24,
+          "כפר סבא": 24,
+          "hod hasharon": 22,
+          "הוד השרון": 22,
+          "netanya": 22,
+          "נתניה": 22,
+          "ramat hasharon": 22,
+          "רמת השרון": 22,
+          "tel aviv": 18,
+          "תל אביב": 18,
+          "petah tikva": 16,
+          "פתח תקווה": 16,
+          "השרון": 22
+        },
+        "negative": {
+          "eilat": -18,
+          "אילת": -18,
+          "beer sheva": -10,
+          "באר שבע": -10
+        }
+      },
+      "jerusalem": {
+        "label": "ירושלים והסביבה",
+        "positive": {
+          "jerusalem": 25,
+          "ירושלים": 25,
+          "har hotzvim": 22,
+          "הר חוצבים": 22,
+          "beit shemesh": 18,
+          "בית שמש": 18,
+          "modiin": 18,
+          "מודיעין": 18,
+          "mevaseret": 16,
+          "מבשרת": 16
+        },
+        "negative": {
+          "eilat": -18,
+          "אילת": -18,
+          "haifa": -8,
+          "חיפה": -8
+        }
+      },
+      "haifa_north": {
+        "label": "חיפה והצפון",
+        "positive": {
+          "haifa": 25,
+          "חיפה": 25,
+          "yokneam": 22,
+          "יקנעם": 22,
+          "nesher": 20,
+          "נשר": 20,
+          "tirat carmel": 18,
+          "טירת הכרמל": 18,
+          "karmiel": 18,
+          "כרמיאל": 18,
+          "nazareth": 16,
+          "נצרת": 16,
+          "afula": 16,
+          "עפולה": 16,
+          "akko": 16,
+          "עכו": 16,
+          "migdal haemek": 18,
+          "מגדל העמק": 18,
+          "צפון": 20,
+          "מפרץ חיפה": 20
+        },
+        "negative": {
+          "eilat": -18,
+          "אילת": -18,
+          "beer sheva": -12,
+          "באר שבע": -12
+        }
+      },
+      "shfela": {
+        "label": "שפלה ורחובות",
+        "positive": {
+          "rehovot": 25,
+          "רחובות": 25,
+          "ness ziona": 24,
+          "נס ציונה": 24,
+          "rishon": 22,
+          "ראשון לציון": 22,
+          "yavne": 20,
+          "יבנה": 20,
+          "lod": 18,
+          "לוד": 18,
+          "ramla": 18,
+          "רמלה": 18,
+          "modiin": 18,
+          "מודיעין": 18,
+          "שפלה": 20
+        },
+        "negative": {
+          "eilat": -18,
+          "אילת": -18,
+          "haifa": -8,
+          "חיפה": -8
+        }
+      },
+      "south": {
+        "label": "דרום",
+        "positive": {
+          "beer sheva": 25,
+          "באר שבע": 25,
+          "ashdod": 22,
+          "אשדוד": 22,
+          "ashkelon": 22,
+          "אשקלון": 22,
+          "kiryat gat": 20,
+          "קרית גת": 20,
+          "omer": 18,
+          "עומר": 18,
+          "eilat": 18,
+          "אילת": 18,
+          "sderot": 16,
+          "שדרות": 16,
+          "דרום": 20,
+          "נגב": 20
+        },
+        "negative": {
+          "haifa": -10,
+          "חיפה": -10
+        }
+      }
+    },
+    "companies": [
+      "monday",
+      "wiz",
+      "similarweb",
+      "riskified",
+      "lightricks",
+      "fiverr",
+      "gong",
+      "walkme",
+      "taboola",
+      "outbrain",
+      "jfrog",
+      "snyk",
+      "catonetworks",
+      "armis",
+      "hibob",
+      "papayaglobal",
+      "rapyd",
+      "melio",
+      "tipalti",
+      "verbit",
+      "deel",
+      "nextinsurance",
+      "lemonade",
+      "honeybook",
+      "yotpo",
+      "bringg",
+      "pecan",
+      "aidoc",
+      "island",
+      "torq",
+      "orcasecurity",
+      "coralogix",
+      "augury",
+      "placerai",
+      "unity",
+      "playtika",
+      "moonactive",
+      "appsflyer",
+      "brightdata",
+      "forter",
+      "cellebrite",
+      "nayax",
+      "kaltura",
+      "zenity",
+      "silverfort",
+      "transmitsecurity",
+      "guesty",
+      "sisense",
+      "cognyte",
+      "immunai",
+      "exodigo",
+      "upwind",
+      "cyera",
+      "descope",
+      "fireblocks",
+      "syte",
+      "trigo",
+      "bizzabo",
+      "novidea",
+      "optimove",
+      "namogoo",
+      "stampli",
+      "vertice",
+      "axonius",
+      "claroty",
+      "perimeterx",
+      "spot",
+      "granulate",
+      "kryon",
+      "hourone",
+      "dagshub",
+      "anyword",
+      "tabnine",
+      "run",
+      "aporia",
+      "deepchecks"
+    ]
+  },
+  "remote_global": {
+    "label": "עבודה מרחוק — עולמי",
+    "positive": {
+      "remote": 24,
+      "anywhere": 30,
+      "worldwide": 30,
+      "global": 20,
+      "distributed": 18,
+      "async": 14,
+      "emea": 16,
+      "europe": 14
+    },
+    "negative": {
+      "us only": -35,
+      "united states only": -35,
+      "hybrid": -10,
+      "on-site": -25,
+      "onsite": -25,
+      "in office": -20,
+      "relocation required": -30
+    },
+    "regions": {
+      "all": {
+        "label": "כל אזורי הזמן",
+        "positive": {},
+        "negative": {}
+      },
+      "emea_hours": {
+        "label": "שעות אירופה / EMEA",
+        "positive": {
+          "emea": 24,
+          "cet": 20,
+          "cest": 20,
+          "european hours": 22,
+          "uk hours": 18,
+          "gmt": 16,
+          "israel": 14
+        },
+        "negative": {
+          "pacific time": -20,
+          "pst": -18,
+          "us hours": -18,
+          "overlap with pst": -22
+        }
+      },
+      "americas_hours": {
+        "label": "שעות אמריקה",
+        "positive": {
+          "est": 20,
+          "pst": 20,
+          "americas": 22,
+          "us hours": 18
+        },
+        "negative": {
+          "cet only": -18,
+          "european hours only": -18
+        }
+      }
+    },
+    "companies": [
+      "gitlab",
+      "zapier",
+      "doist",
+      "automattic",
+      "buffer",
+      "hotjar",
+      "toggl",
+      "remote",
+      "deel",
+      "oyster",
+      "aha",
+      "close",
+      "hopin",
+      "invision",
+      "clevertech",
+      "x-team",
+      "sourcegraph",
+      "supabase",
+      "posthog",
+      "cal",
+      "fly",
+      "render",
+      "vercel",
+      "linear"
+    ]
+  },
+  "europe": {
+    "label": "אירופה",
+    "positive": {
+      "europe": 14,
+      "emea": 13,
+      "remote": 18,
+      "hybrid": 12,
+      "anywhere": 20,
+      "cet": 14
+    },
+    "negative": {
+      "us only": -40,
+      "united states only": -40,
+      "canada only": -35,
+      "us work authorization": -45,
+      "visa sponsorship not available": -20
+    },
+    "regions": {
+      "all": {
+        "label": "כל אירופה",
+        "positive": {},
+        "negative": {}
+      },
+      "dach": {
+        "label": "גרמניה, אוסטריה ושווייץ",
+        "positive": {
+          "berlin": 24,
+          "munich": 22,
+          "hamburg": 20,
+          "vienna": 20,
+          "zurich": 22,
+          "germany": 22,
+          "austria": 18,
+          "switzerland": 20
+        },
+        "negative": {}
+      },
+      "uk_ie": {
+        "label": "בריטניה ואירלנד",
+        "positive": {
+          "london": 24,
+          "manchester": 18,
+          "dublin": 22,
+          "united kingdom": 20,
+          "ireland": 20
+        },
+        "negative": {}
+      },
+      "nordics": {
+        "label": "סקנדינביה",
+        "positive": {
+          "stockholm": 24,
+          "copenhagen": 22,
+          "oslo": 20,
+          "helsinki": 20,
+          "sweden": 20,
+          "denmark": 20,
+          "norway": 18,
+          "finland": 18
+        },
+        "negative": {}
+      },
+      "south_eu": {
+        "label": "דרום אירופה",
+        "positive": {
+          "barcelona": 24,
+          "madrid": 22,
+          "lisbon": 24,
+          "porto": 20,
+          "milan": 20,
+          "rome": 18,
+          "athens": 18,
+          "spain": 20,
+          "portugal": 20,
+          "italy": 18
+        },
+        "negative": {}
+      },
+      "benelux": {
+        "label": "בנלוקס",
+        "positive": {
+          "amsterdam": 24,
+          "rotterdam": 20,
+          "utrecht": 18,
+          "brussels": 20,
+          "netherlands": 22,
+          "belgium": 18
+        },
+        "negative": {}
+      }
+    },
+    "companies": [
+      "spotify",
+      "klarna",
+      "adyen",
+      "personio",
+      "celonis",
+      "n26",
+      "revolut",
+      "wise",
+      "monzo",
+      "checkout",
+      "gocardless",
+      "typeform",
+      "factorial",
+      "glovo",
+      "bolt",
+      "pleo",
+      "contentful",
+      "sennder",
+      "trade",
+      "getyourguide",
+      "hellofresh",
+      "zalando",
+      "delivery",
+      "babbel",
+      "sumup",
+      "mollie",
+      "backbase",
+      "messagebird",
+      "miro",
+      "picnic"
+    ]
+  },
+  "usa": {
+    "label": "ארה\"ב",
+    "positive": {
+      "united states": 13,
+      "remote": 20,
+      "anywhere": 18,
+      "us": 10
+    },
+    "negative": {
+      "europe only": -30,
+      "emea only": -30,
+      "uk only": -30,
+      "india only": -35,
+      "must relocate": -20
+    },
+    "regions": {
+      "all": {
+        "label": "כל ארה\"ב",
+        "positive": {},
+        "negative": {}
+      },
+      "west": {
+        "label": "החוף המערבי",
+        "positive": {
+          "san francisco": 24,
+          "bay area": 24,
+          "seattle": 22,
+          "los angeles": 20,
+          "san diego": 18,
+          "portland": 18,
+          "california": 20,
+          "washington": 16
+        },
+        "negative": {}
+      },
+      "east": {
+        "label": "החוף המזרחי",
+        "positive": {
+          "new york": 24,
+          "boston": 22,
+          "washington dc": 20,
+          "atlanta": 18,
+          "miami": 18,
+          "philadelphia": 16,
+          "new jersey": 16
+        },
+        "negative": {}
+      },
+      "central": {
+        "label": "מרכז ודרום",
+        "positive": {
+          "austin": 22,
+          "chicago": 22,
+          "denver": 20,
+          "dallas": 18,
+          "houston": 18,
+          "nashville": 16,
+          "texas": 18,
+          "colorado": 18
+        },
+        "negative": {}
+      }
+    },
+    "companies": [
+      "stripe",
+      "airbnb",
+      "doordash",
+      "coinbase",
+      "robinhood",
+      "brex",
+      "ramp",
+      "notion",
+      "figma",
+      "airtable",
+      "asana",
+      "databricks",
+      "snowflake",
+      "datadog",
+      "hashicorp",
+      "twilio",
+      "plaid",
+      "affirm",
+      "instacart",
+      "reddit",
+      "discord",
+      "canva",
+      "openai",
+      "anthropic",
+      "scale",
+      "cruise",
+      "rippling",
+      "gusto",
+      "carta",
+      "benchling"
+    ]
+  }
+}

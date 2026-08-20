@@ -1,0 +1,51 @@
+JobDibs
+Copyright (C) 2026 Shani Segev
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. See the LICENSE file for the full text.
+
+
+THE NAME IS NOT PART OF THE LICENCE
+-----------------------------------
+
+The AGPL covers the source code. It does not grant any right to use the name
+"JobDibs", the project's branding, or its visual identity.
+
+If you fork this project and distribute or host your modified version, you must
+call it something else. You may of course state, accurately and without
+implying endorsement, that your work is derived from JobDibs — for example
+"based on JobDibs" with a link back to this repository.
+
+This exists so that a modified version cannot be mistaken for this one.
+
+
+WHAT THIS PROJECT IS FOR
+------------------------
+
+JobDibs was written so that a person looking for work can search on their own
+computer without handing their CV to anyone. Everything runs locally; the only
+outbound requests are to public job-board endpoints, made from the user's own
+machine.
+
+The AGPL cannot and does not restrict how you use the software. The following
+is a statement of intent, not a licence term. Please do not build things that:
+
+  - collect, store or transmit other people's CVs without their knowledge
+  - submit applications automatically on someone's behalf without their review
+  - scrape sites that prohibit it, including LinkedIn and national job boards
+  - present listings as current when they are stale
+
+If you host a modified version for other people, note that section 13 of the
+AGPL requires you to offer those users the complete source code of your
+version.
+
+
+NO WARRANTY
+-----------
+
+This software is provided without warranty of any kind, as set out in sections
+15 and 16 of the LICENSE. It is maintained on a best-effort basis by one
+person. Job-board endpoints change without notice and results may be
+incomplete or out of date. Verify anything that matters before acting on it.
