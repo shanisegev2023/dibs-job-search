@@ -283,6 +283,10 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--grid);
       <label>היקף</label>
       <div class="chips" id="fscopes"></div>
     </div>
+    <div class="fg" style="flex:1 0 100%">
+      <label>אופן העבודה</label>
+      <div class="chips" id="farr"></div>
+    </div>
   </div>
   <p class="count" id="count"></p>
   <div id="list"></div>
@@ -326,6 +330,10 @@ const SCOPES = {
   "unknown":        {he:"לא צוין",             g:"none",     rank:12}
 };
 const colorOf = k => GROUPS[(SCOPES[k]||SCOPES.unknown).g].color;
+
+// אופן העבודה — ממד נפרד מהיקף המשרה ומהמיקום
+const ARR = {remote:{he:"מרחוק",rank:1}, hybrid:{he:"היברידי",rank:2},
+             onsite:{he:"מהמשרד",rank:3}, unknown:{he:"לא צוין",rank:4}};
 const FLEX = new Set(Object.keys(SCOPES).filter(k => SCOPES[k].g === "flex"));
 
 // סוגי ההעסקה שאפשר לבחור — חייב להתאים למפתחות ב-SCOPE_FAMILIES שב-engine.py
@@ -335,7 +343,7 @@ const PREF_SCOPES = ["full-time","part-time","fractional","freelance","contract"
 const S = { roles:[], cvText:"", cvName:"", scopes:new Set(), extra:[], exclude:[],
             opts:{use_boards:true, use_ats:true, auto_discover:true, strict_location:true},
             jobs:[], meta:{}, status:{},
-            F:{q:"",src:"",sort:"score"}, fscopes:new Set() };
+            F:{q:"",src:"",sort:"score"}, fscopes:new Set(), farr:new Set() };
 
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -538,6 +546,15 @@ function show(res){
     const s=b.dataset.fs; S.fscopes.has(s)?S.fscopes.delete(s):S.fscopes.add(s);
     b.setAttribute("aria-pressed",S.fscopes.has(s)); draw(); });
 
+  const acounts={}; S.jobs.forEach(j=>{const a=j.arrangement||"unknown";
+    acounts[a]=(acounts[a]||0)+1;});
+  $("#farr").innerHTML = Object.keys(acounts).sort((a,b)=>(ARR[a]?.rank||9)-(ARR[b]?.rank||9))
+    .map(a=>`<button class="chip" data-fa="${a}" aria-pressed="false">
+      ${ARR[a]?.he||a} <span style="opacity:.6">${acounts[a]}</span></button>`).join("");
+  $$("[data-fa]").forEach(b=>b.onclick=()=>{
+    const a=b.dataset.fa; S.farr.has(a)?S.farr.delete(a):S.farr.add(a);
+    b.setAttribute("aria-pressed",S.farr.has(a)); draw(); });
+
   const srcs=[...new Set(S.jobs.map(j=>(j.source||"").split(":")[0]))].sort();
   $("#fsrc").innerHTML = '<option value="">כל המקורות</option>'+srcs.map(s=>`<option>${esc(s)}</option>`).join("");
   $("#foot").textContent = `עודכן ${S.meta.generated_at} · מקורות: ${(S.meta.sources||[]).slice(0,14).join(" · ")}`;
@@ -553,6 +570,7 @@ function draw(){
   let out = S.jobs.filter(j=>{
     if(S.F.src && !(j.source||"").startsWith(S.F.src)) return false;
     if(S.fscopes.size && !S.fscopes.has(j.scope_tag)) return false;
+    if(S.farr.size && !S.farr.has(j.arrangement||"unknown")) return false;
     if(S.F.q){
       const b=[j.title,j.company,j.location,j.source,j.employment_type,j.rate,
                (j.reasons||[]).join(" ")].join(" ").toLowerCase();
@@ -602,6 +620,7 @@ function card(j){
         ${j.rate?`<span class="tag">${esc(j.rate)}</span>`:""}
         ${j.posted?`<span class="tag">${fmtDate(j.posted)}</span>`:""}
         <span class="tag">${esc((j.source||"").split(":")[0])}</span>
+        ${j.arrangement&&j.arrangement!=="unknown"?`<span class="tag">${ARR[j.arrangement].he}</span>`:""}
         ${offMkt?'<span class="tag bad">⚠ מחוץ לאזור שנבחר</span>':""}
         ${badLoc?'<span class="tag bad">⚠ הגבלת מיקום</span>':""}
         ${badScope?'<span class="tag bad">⚠ לא סוג ההעסקה שביקשת</span>':""}

@@ -1489,6 +1489,58 @@ def _hits(text, terms):
     return {k: v for k, v in terms.items() if term_in(text, k.lower())}
 
 
+# ── אופן העבודה: מהמשרד / היברידי / מרחוק ──────────────────────────
+# זה ממד נפרד גם ממיקום (איפה החברה) וגם מהיקף המשרה (מלאה/חלקית).
+_ARR_HYBRID = ("hybrid", "היברידי", "היברידית", "partially remote", "part remote",
+               "remote friendly", "remote-friendly", "flexible working",
+               "days in the office", "days from home", "days a week in")
+_ARR_REMOTE = ("remote", "fully remote", "100% remote", "work from home", "wfh",
+               "telecommute", "anywhere", "worldwide", "distributed", "מרחוק",
+               "מהבית", "עבודה מהבית", "work from anywhere")
+_ARR_ONSITE = ("on-site", "onsite", "on site", "in office", "in-office",
+               "in the office", "office based", "office-based", "במשרד",
+               "מהמשרד", "no remote", "not remote")
+
+ARRANGEMENTS = {"remote": "מרחוק", "hybrid": "היברידי",
+                "onsite": "מהמשרד", "unknown": "לא צוין"}
+
+
+# בגוף המודעה נדרש ניסוח חד־משמעי: "remote" לבדו מופיע גם אצל משרות
+# מהמשרד ("we offer remote days"), ולא מספיק כדי לקבוע.
+_ARR_REMOTE_STRONG = ("fully remote", "100% remote", "remote position",
+                      "remote role", "remote job", "this is a remote",
+                      "work from home", "work from anywhere", "remote-first",
+                      "remote first", "telecommute", "משרה מרחוק", "עבודה מהבית")
+
+
+def resolve_arrangement(job):
+    """מחזיר remote / hybrid / onsite / unknown עבור משרה."""
+    head = " ".join([job.get("location", ""), job.get("title", ""),
+                     job.get("employment_type", "")]).lower()
+    desc = (job.get("desc") or "").lower()[:1500]
+
+    if any(term_in(head, t) for t in _ARR_HYBRID):
+        return "hybrid"
+    if any(term_in(head, t) for t in _ARR_REMOTE):
+        return "remote"
+    if any(term_in(head, t) for t in _ARR_ONSITE):
+        return "onsite"
+    if any(term_in(desc, t) for t in _ARR_HYBRID):
+        return "hybrid"
+    if any(term_in(desc, t) for t in _ARR_REMOTE_STRONG):
+        return "remote"
+    if any(term_in(desc, t) for t in _ARR_ONSITE):
+        return "onsite"
+
+    # שדה מיקום שמצביע על מקום אחד קונקרטי — כמעט תמיד מהמשרד.
+    # "APAC, EMEA" הוא אזור ולא כתובת, ולכן לא נספר כאן.
+    loc = job.get("location", "")
+    codes = geo_codes(loc)
+    if len(codes) == 1 or (not codes and residual_place_words(loc)):
+        return "onsite"
+    return "unknown"
+
+
 def score(job, prof, now=None):
     now = now or datetime.now(timezone.utc)
     blob = " ".join([job["title"], job["company"], job["location"],
@@ -1554,6 +1606,7 @@ def score(job, prof, now=None):
         job["age_days"] = None
         bd["freshness"] = fr["weight"] * 0.4
 
+    job["arrangement"] = resolve_arrangement(job)
     job["score"] = int(max(0, min(100, round(sum(bd.values())))))
     job["breakdown"] = {k: round(v, 1) for k, v in bd.items()}
     job["reasons"] = why
