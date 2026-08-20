@@ -28,6 +28,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import engine
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+VERSION = "1.1.0"
 DATA = engine.DATA_DIR
 PROFILES = os.path.join(DATA, "profiles.json")
 LAST = os.path.join(DATA, "last.json")
@@ -269,6 +270,24 @@ class Handler(BaseHTTPRequestHandler):
         return self._send(404, {"error": "not found"})
 
 
+def _heal_launchers():
+    """
+    מחזיר את הרשאת ההרצה לקובצי ההפעלה.
+    קובץ zip שיורד מגיטהאב, או העלאה דרך הדפדפן, עלולים לאבד את הרשאת
+    ההרצה — ואז לחיצה כפולה נותנת "you do not have appropriate access
+    privileges". אחרי הרצה אחת מהטרמינל, הלחיצה הכפולה תעבוד מכאן והלאה.
+    """
+    for name in ("Start JobDibs.command",):   # רק במק/לינוקס יש משמעות
+        p = os.path.join(HERE, name)
+        try:
+            if os.path.exists(p) and not os.access(p, os.X_OK):
+                os.chmod(p, os.stat(p).st_mode | 0o111)
+                print(f"  ✓ תוקנה הרשאת ההרצה של \"{name}\" "
+                      f"(restored the executable bit)")
+        except Exception:
+            pass
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8765)
@@ -284,9 +303,32 @@ def main():
               "  ✗ לא זוהה לוח Workday או Comeet בכתובת הזו.")
         return
 
-    srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
-    url = f"http://127.0.0.1:{a.port}"
-    print(f"\n  JobDibs רץ על  {url}")
+    _heal_launchers()
+
+    # אם הפורט תפוס — כנראה שיש חלון קודם שעדיין רץ. מנסים את הבא בתור
+    # במקום ליפול. זו הסיבה הנפוצה ל"בפעם הראשונה עבד ובשנייה לא".
+    srv, port = None, a.port
+    for p in range(a.port, a.port + 20):
+        try:
+            srv = ThreadingHTTPServer(("127.0.0.1", p), Handler)
+            port = p
+            break
+        except OSError:
+            continue
+    if srv is None:
+        print("\n  לא הצלחתי לתפוס פורט פנוי בטווח "
+              f"{a.port}–{a.port + 19}.")
+        print("  כנראה שכבר רצים כמה עותקים של JobDibs. סגרי את חלונות")
+        print("  הטרמינל הפתוחים ונסי שוב.\n")
+        return
+    if port != a.port:
+        print(f"\n  הפורט {a.port} היה תפוס (כנראה חלון קודם שעדיין פתוח),")
+        print(f"  אז עברתי לפורט {port}.")
+
+    url = f"http://127.0.0.1:{port}"
+    print(f"\n  JobDibs {VERSION}")
+    print(f"  תיקייה: {HERE}")
+    print(f"  רץ על  {url}")
     print("  לעצירה: Ctrl+C\n")
     if not a.no_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()

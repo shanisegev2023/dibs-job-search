@@ -67,31 +67,49 @@ Double-click the zip. Move the resulting folder somewhere permanent.
 **Install** and wait a few minutes. That one-time install brings Python 3.9,
 which is more than enough (JobDibs needs 3.8+).
 
-### 2. First run — macOS will block it once
+### 2. First run — start from Terminal, not the double-click
 
-Double-click **`Start JobDibs.command`**. macOS shows *"Apple could not verify
-that it is free of malware"* with only two buttons: *Move to Trash* and *Done*.
+The folder contains `Start JobDibs.command` for double-clicking, **but don't
+use it for the first run.** Starting from Terminal clears both of macOS's
+blocks at once, and repairs the launcher so double-clicking works from then on.
 
-**Click Done.** This happens to every file downloaded from the internet that
-isn't signed with a paid Apple certificate. Then, once:
+1. Command + Space, type `Terminal`, Enter
+2. Type `cd ` — with a trailing space — then **drag the folder from Finder onto
+   the Terminal window**. The path fills itself in. Press Enter
+3. Type `python3 app.py` and press Enter
 
-1. **System Settings** → **Privacy & Security**
-2. Scroll to the bottom, to **Security**. You'll see
-   *"Start JobDibs.command" was blocked to protect your Mac*
-3. Click **Open Anyway**, authenticate, then **Open**
+You'll see this line on that run:
 
-After that a normal double-click works.
+```
+✓ תוקנה הרשאת ההרצה של "Start JobDibs.command" (restored the executable bit)
+```
 
-> On macOS Sequoia and later this is the only route — the old Control-click →
-> Open bypass no longer works.
-
-**Prefer to skip all of that?** Open Terminal, `cd` into the folder, and run
-`python3 app.py`. Same thing, no Gatekeeper.
+Zip files downloaded from the internet routinely lose the executable bit;
+JobDibs puts it back. **From here on, double-clicking works.**
 
 > If macOS offers to install developer command line tools, click **Install**,
 > wait, and try again. That's Apple's one-time Python setup.
 
-A Terminal window opens, and your browser opens on the app a few seconds later.
+Your browser opens on the app a few seconds later.
+
+### If you double-clicked anyway
+
+macOS shows one of two dialogs, and they are completely different problems:
+
+**1. "could not be executed because you do not have appropriate access
+privileges"** — the executable bit is missing. There is no GUI fix; run
+`python3 app.py` from Terminal once as above and it repairs itself.
+
+**2. "Apple could not verify that it is free of malware"** — two buttons,
+*Move to Trash* and *Done*. **Click Done, not Move to Trash.** Then, once:
+
+1. **System Settings** → **Privacy & Security**
+2. Scroll to **Security**. You'll see
+   *"Start JobDibs.command" was blocked to protect your Mac*
+3. Click **Open Anyway**, authenticate, then **Open**
+
+> On macOS Sequoia and later this is the only route — the old Control-click →
+> Open bypass no longer works.
 
 ---
 
@@ -238,8 +256,15 @@ anywhere.
 **"Active sources: 0" and no results.** Almost always no internet connection, or
 a firewall blocking it.
 
-**Port already in use.** Run `python3 app.py --port 8899` (macOS/Linux) or
-`py app.py --port 8899` (Windows).
+**It worked once, then stopped.** Two causes, both handled from v1.1 on:
+
+1. **A previous window is still running** and holding the port. JobDibs now
+   moves to the next free port and says so; before, it just crashed. To force
+   a specific port: `python3 app.py --port 8899` (macOS/Linux) or
+   `py app.py --port 8899` (Windows).
+2. **You're launching a different copy.** It's easy to accumulate several — one
+   in Downloads from an old zip, one somewhere else. If one works and another
+   doesn't, they're different copies. Delete the stale ones.
 
 **No LinkedIn / Indeed results.** They block automated access and there's no way
 around it. You can paste listings from those sites into `seed_jobs.json` by hand
