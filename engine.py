@@ -1130,7 +1130,15 @@ def title_ok(job, prof):
 # "Remote — Berlin" היא משרה בגרמניה, ומי שביקש ישראל לא אמור לקבל אותה.
 
 GEO_COUNTRIES = {
- "IL": ("israel", "ישראל", "tel aviv", "tel-aviv", "telaviv", "תל אביב", "תל־אביב",
+ "IL": ("israel", "ישראל", "isr", "tel aviv", "tel-aviv", "telaviv", "תל אביב", "תל־אביב",
+        "tel aviv-yafo", "jaffa", "yafo", "ramat hachayal", "ramat", "kiryat", "kfar",
+        "givat", "rosh haayin", "rosh ha'ayin", "ראש העין", "kiryat ono", "קרית אונו",
+        "even yehuda", "ניר", "azrieli", "sarona", "atidim", "מתם", "matam",
+        "petach tikva", "petah tiqwa", "rananna", "hertzliya", "herzliya pituach",
+        "rehovot", "nes ziona", "yehud", "יהוד", "shoham", "שוהם", "lod", "לוד",
+        "ramla", "רמלה", "ashkelon", "אשקלון", "kiryat gat", "קרית גת", "sderot",
+        "karmiel", "כרמיאל", "tiberias", "טבריה", "safed", "צפת", "nahariya", "נהריה",
+        "hadera", "חדרה", "zichron", "זכרון", "pardes hana", "binyamina",
         "jerusalem", "ירושלים", "haifa", "חיפה", "herzliya", "herzeliya", "הרצליה",
         "raanana", "ra'anana", "רעננה", "netanya", "נתניה", "petah tikva", "פתח תקווה",
         "ramat gan", "רמת גן", "rehovot", "רחובות", "beer sheva", "be'er sheva",
@@ -1146,9 +1154,15 @@ GEO_COUNTRIES = {
         "san diego", "las vegas", "minneapolis", "detroit", "philadelphia",
         "pittsburgh", "washington dc", "arlington va", "raleigh", "charlotte",
         "nashville", "salt lake city", "kansas city", "st. louis", "columbus ohio",
-        "california", "texas", "florida", "colorado", "massachusetts", "illinois",
-        "new jersey", "virginia", "arizona", "utah", "oregon", "michigan",
-        "north carolina", "pennsylvania", "washington state"),
+        "alabama", "alaska", "arizona", "arkansas", "california", "colorado",
+        "connecticut", "delaware", "florida", "georgia usa", "hawaii", "idaho",
+        "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana", "maine",
+        "maryland", "massachusetts", "michigan", "minnesota", "mississippi",
+        "missouri", "montana", "nebraska", "nevada", "new hampshire", "new jersey",
+        "new mexico", "north carolina", "north dakota", "ohio", "oklahoma",
+        "oregon", "pennsylvania", "rhode island", "south carolina", "south dakota",
+        "tennessee", "vermont", "virginia", "washington state", "west virginia",
+        "wisconsin", "wyoming", "district of columbia"),
  "CA": ("canada", "toronto", "vancouver", "montreal", "ottawa", "calgary",
         "edmonton", "waterloo", "ontario", "quebec", "british columbia"),
  "UK": ("united kingdom", "u.k.", "england", "scotland", "wales",
@@ -1246,7 +1260,10 @@ GEO_COUNTRIES = {
  "ID": ("indonesia", "jakarta", "bandung", "surabaya", "bali"),
  "PH": ("philippines", "manila", "makati", "cebu", "taguig", "pasig", "quezon city"),
  "AU": ("australia", "sydney", "melbourne", "brisbane", "perth", "adelaide",
-        "canberra", "gold coast"),
+        "canberra", "gold coast", "hobart", "darwin", "newcastle nsw", "geelong",
+        "bendigo", "ballarat", "gawler", "wollongong", "townsville", "cairns",
+        "new south wales", "victoria australia", "queensland", "tasmania",
+        "western australia", "south australia"),
  "NZ": ("new zealand", "auckland", "wellington", "christchurch"),
  "BR": ("brazil", "brasil", "sao paulo", "são paulo", "rio de janeiro",
         "belo horizonte", "porto alegre", "curitiba", "recife", "florianopolis",
@@ -1333,12 +1350,46 @@ _GEO_INDEX = [(code, term) for code, terms in GEO_COUNTRIES.items() for term in 
 _GEO_INDEX.sort(key=lambda x: -len(x[1]))        # ביטויים ארוכים קודם
 
 
+# מילים שאינן מקום: צורת עבודה, מילות קישור, ותיאורים כלליים.
+# הן נוטרלות לפני שבודקים אם נשאר בשדה שם מקום שלא זיהינו.
+_NOT_A_PLACE = {
+    "remote", "remotely", "remote-first", "first", "friendly", "hybrid", "onsite",
+    "site", "sites", "office", "offices", "home", "house", "wfh", "telecommute",
+    "virtual", "distributed", "async", "asynchronous", "nomad", "nomadic",
+    "anywhere", "everywhere", "worldwide", "world", "wide", "global", "globally",
+    "international", "flexible", "flex", "fully", "entirely", "mostly", "partially",
+    "primarily", "optional", "preferred", "available", "possible", "based",
+    "the", "and", "for", "with", "near", "from", "any", "all", "none", "not",
+    "specified", "various", "multiple", "several", "other", "others", "tbd",
+    "location", "locations", "area", "areas", "region", "regions", "zone", "zones",
+    "timezone", "timezones", "time", "hours", "overlap", "travel", "field",
+    "job", "jobs", "position", "role", "full", "part", "time", "contract",
+    "freelance", "intern", "internship", "temporary", "permanent", "only",
+    "headquarters", "campus", "work", "working", "employee", "candidates", "etc",
+}
+
+_HEBREW_RE = re.compile(r"[\u0590-\u05FF]")
+
+
+def residual_place_words(text):
+    """מילים בשדה המיקום שאינן צורת עבודה ואינן מילות קישור — כלומר שם מקום."""
+    t = re.sub(r"[^\w\u0590-\u05FF]+", " ", (text or "").lower())
+    out = []
+    for w in t.split():
+        if len(w) < 3 or w.isdigit() or w in _NOT_A_PLACE:
+            continue
+        out.append(w)
+    return out
+
+
 def geo_codes(text):
     """אילו מדינות/גושים מוזכרים בטקסט. מחזיר set של קודי מדינה."""
     t = (text or "").lower()
     if not t.strip():
         return set()
     found = set()
+    if _HEBREW_RE.search(t):
+        found.add("IL")          # מודעה בעברית — משרה בישראל
     for bloc, codes in GEO_BLOCS.items():
         if term_in(t, bloc):
             found |= codes
@@ -1397,6 +1448,15 @@ def location_ok(job, prof):
     if found and not (found & allowed):
         job["_loc_reason"] = "מדינה אחרת"
         return False
+
+    if not found:
+        # לא זוהתה מדינה. אם בכל זאת יש בשדה שם מקום קונקרטי — למשל עיר
+        # קטנה שאינה ברשימה — זו כמעט תמיד לא המדינה שביקשת: מקומות
+        # בישראל מכוסים היטב. "Remote"/"Anywhere" לא משאירים שארית.
+        resid = residual_place_words(job.get("location", ""))
+        if resid:
+            job["_loc_reason"] = "מיקום לא מזוהה: " + " ".join(resid[:3])
+            return False
 
     blob = " ".join([job.get("location", ""), job.get("title", ""),
                      job.get("employment_type", ""), job.get("desc", "")]).lower()
@@ -1557,7 +1617,7 @@ def search(prof, min_score=35, limit=300, use_ats=True, use_boards=True,
             if location_ok(j, prof):
                 passed.append(j)
             else:
-                dropped[j.get("_loc_reason", "מחוץ לאזור")] += 1
+                dropped[j.get("_loc_reason", "מחוץ לאזור").split(":")[0]] += 1
         if dropped:
             why = ", ".join(f"{k}: {v}" for k, v in dropped.most_common())
             log(f"סוננו {sum(dropped.values())} משרות מחוץ לאזור שנבחר ({why}).")
