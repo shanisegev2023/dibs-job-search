@@ -468,7 +468,8 @@ function preview(){
       cv_text:S.cvText, roles:S.roles, market:$("#market").value,
       region:$("#region").value, scopes:[...S.scopes],
       extra_terms:S.extra, exclude_terms:S.exclude});
-    const lvl = {junior:"ג׳וניור",mid:"מיד-לבל",senior:"סניור",leader:"הנהלה"}[r.level]||r.level;
+    const lvl = {junior:"ג׳וניור",mid:"מיד-לבל",senior:"סניור",leader:"הנהלה",
+                 unknown:"לא זוהה (לא הועלו קו״ח)"}[r.level]||r.level;
     $("#pvBody").innerHTML =
       `<span class="pill">רמה: <b>${lvl}</b></span>` +
       (r.region_label ? `<span class="pill">אזור: <b>${esc(r.region_label)}</b></span>` : "") +

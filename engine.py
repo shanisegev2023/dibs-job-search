@@ -415,7 +415,9 @@ def build_profile(cv_text, roles, market="israel", scope_prefs=None,
         yrs = [int(y) for y in re.findall(r"\b(19[89]\d|20[0-4]\d)\b", text)]
         if len(yrs) >= 2:
             years = max(0, min(40, datetime.now().year - min(yrs)))
-    level = ("junior" if years < 3 else "mid" if years < 6
+    has_cv = len(text.strip()) >= 200
+    level = ("unknown" if not has_cv else
+             "junior" if years < 3 else "mid" if years < 6
              else "senior" if years < 12 else "leader")
     seniority = {"junior": {"junior": 15, "associate": 10, "senior": -8, "principal": -18,
                             "director": -25, "vp ": -30, "head of": -20},
@@ -424,7 +426,8 @@ def build_profile(cv_text, roles, market="israel", scope_prefs=None,
                             "junior": -25, "associate": -12, "intern": -40, "entry level": -30},
                  "leader": {"head of": 14, "director": 14, "vp ": 12, "chief": 12, "principal": 10,
                             "senior": 8, "lead": 8, "junior": -30, "associate": -20,
-                            "intern": -45, "entry level": -35}}[level]
+                            "intern": -45, "entry level": -35},
+                 "unknown": {}}[level]        # בלי קו"ח — לא מנחשים ותק
 
     # --- שפות ---
     langs = [l for l in ("hebrew","english","russian","french","spanish","german","italian",
@@ -446,8 +449,11 @@ def build_profile(cv_text, roles, market="israel", scope_prefs=None,
     if "student" not in chosen_families and "entry-level" not in chosen_families:
         hard_exclude += STUDENT_TITLES
 
-    # מי שמחפש התמחות או משרת כניסה — לא נעניש אותו על "junior"
-    if "student" in chosen_families or "entry-level" in chosen_families:
+    # מי שמחפש התמחות או משרת כניסה — לא נעניש אותו על "junior".
+    # רק בבחירה מפורשת: ברירת המחדל כוללת את כל המשפחות, ובלי התנאי
+    # הזה כל מי שלא בחר סוג העסקה היה מקבל בונוס על משרות ג'וניור.
+    if explicit_scope and ("student" in chosen_families
+                           or "entry-level" in chosen_families):
         seniority = {k: v for k, v in seniority.items()
                      if k not in ("junior", "intern", "entry level", "associate")}
         seniority.update({"junior": 10, "intern": 8, "entry level": 10, "graduate": 8})
